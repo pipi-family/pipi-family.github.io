@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>控制排插接口 - 3D華麗開關效果</title>
+<style>
+  body { background: #0f172a; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; font-family: 'Segoe UI', sans-serif; flex-direction: column; color: #fff; }
+  h1 { margin-bottom: 10px; }
+  .ip-info { font-size: 16px; margin-bottom: 20px; }
+  .outlets { display: flex; gap: 30px; flex-wrap: wrap; justify-content: center; }
+  .outlet { background: #fff; border-radius: 20px; padding: 20px; width: 150px; display: flex; flex-direction: column; align-items: center; box-shadow: 0 10px 20px rgba(0,0,0,0.2); transition: transform 0.3s, box-shadow 0.3s; position: relative; animation: popin 0.5s ease forwards; color: #333; }
+  @keyframes popin { 0% { transform: scale(0.8); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+  .outlet:hover { transform: translateY(-5px); box-shadow: 0 15px 30px rgba(0,0,0,0.3); }
+  .outlet img { width: 100px; height: 100px; margin: 10px 0; transition: transform 0.3s; }
+  .outlet-label { margin-top: 8px; font-size: 16px; font-weight: bold; cursor: pointer; }
+  .switch { position: relative; width: 60px; height: 34px; margin-bottom: 10px; perspective: 1000px; }
+  .switch input { opacity: 0; width: 0; height: 0; }
+  .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; border-radius: 34px; transition: 0.4s; box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.3); transform-style: preserve-3d; }
+  .slider:before { position: absolute; content: ""; height: 26px; width: 26px; left: 4px; bottom: 4px; background: linear-gradient(145deg, #ffffff, #e6e6e6); border-radius: 50%; transition: 0.4s; box-shadow: 0 5px 10px rgba(0,0,0,0.2); transform: rotateY(0deg); }
+  input:checked + .slider { background-color: #4caf50; box-shadow: inset 0 0 8px #4caf50aa, 0 0 10px #4caf50; }
+  input:checked + .slider:before { transform: translateX(26px) rotateY(180deg); background: linear-gradient(145deg, #d4ffd4, #a8e6a8); }
+  .switch.offline .slider { background-color: #888; cursor: not-allowed; box-shadow: none; animation: blink 1s infinite; }
+  .switch.offline .slider:before { background: #ccc; }
+  @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; }
+  }
+  #log { width: 90%; max-width: 600px; background: #1e293b; padding: 15px; margin-top: 30px; border-radius: 10px; font-size: 14px; overflow-y: auto; max-height: 200px; }
+  .log-success { color: #4caf50; }
+  .log-failure { color: #f44336; }
+  .log-offline { color: #9e9e9e; }
+  @media (max-width: 600px) { .outlets { flex-direction: column; align-items: center; } }
+</style>
+</head>
+<body>
+<h1>Power Management Unit</h1>
+<div class="ip-info">IP 位址: <strong id="ip-address">192.168.1.201</strong> | MAC 位址: <strong id="mac-address">00:1A:2B:3C:4D:5E</strong></div>
+<div class="outlets" id="outletContainer"></div>
+<div id="log"></div>
+<script>
+const fakeStatus = [
+  { outlet: 1, name: "伺服器", state: "on" },
+  { outlet: 2, name: "工作站", state: "off" },
+  { outlet: 3, name: "交換機", state: "offline" },
+  { outlet: 4, name: "備援系統", state: "on" }
+];
+
+function log(message, type) {
+  const now = new Date().toLocaleTimeString();
+  const entry = document.createElement('div');
+  entry.textContent = `[${now}] ${message}`;
+  if (type === 'success') entry.className = 'log-success';
+  else if (type === 'failure') entry.className = 'log-failure';
+  else if (type === 'offline') entry.className = 'log-offline';
+  document.getElementById('log').prepend(entry);
+}
+
+function createOutlet(outlet) {
+  const container = document.createElement('div');
+  container.className = 'outlet';
+
+  const label = document.createElement('label');
+  label.className = 'switch';
+
+  const input = document.createElement('input');
+  input.type = 'checkbox';
+  input.dataset.outlet = outlet.outlet;
+
+  const slider = document.createElement('span');
+  slider.className = 'slider';
+
+  label.appendChild(input);
+  label.appendChild(slider);
+  container.appendChild(label);
+
+  const img = document.createElement('img');
+  img.id = `outlet-img-${outlet.outlet}`;
+  container.appendChild(img);
+
+  const outletLabel = document.createElement('div');
+  outletLabel.className = 'outlet-label';
+  outletLabel.textContent = outlet.name || `Outlet ${outlet.outlet}`;
+  container.appendChild(outletLabel);
+
+  document.getElementById('outletContainer').appendChild(container);
+
+  updateOutletState(outlet, input, label, img);
+
+  input.addEventListener('change', () => {
+    if (input.disabled) return;
+    if (input.checked) {
+      img.src = 'power_on.png';
+      log(`✅ 插座 ${outlet.name} 開啟`, 'success');
+    } else {
+      img.src = 'power_off.png';
+      log(`❌ 插座 ${outlet.name} 關閉`, 'failure');
+    }
+  });
+
+  outletLabel.addEventListener('click', () => {
+    if (input.disabled) return;
+    input.checked = !input.checked;
+    input.dispatchEvent(new Event('change'));
+  });
+}
+
+function updateOutletState(outlet, input, label, img) {
+  if (outlet.state === 'on') {
+    input.disabled = false;
+    label.classList.remove('offline');
+    input.checked = true;
+    img.src = 'power_on.png';
+  } else if (outlet.state === 'off') {
+    input.disabled = false;
+    label.classList.remove('offline');
+    input.checked = false;
+    img.src = 'power_off.png';
+  } else {
+    input.disabled = true;
+    label.classList.add('offline');
+    img.src = 'power_offline.png';
+    log(`⚠️ 插座 ${outlet.name} 離線`, 'offline');
+  }
+}
+
+fakeStatus.forEach(createOutlet);
+</script>
+</body>
+</html>

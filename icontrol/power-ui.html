@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <title>Power Management Unit</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f4f4;
+      padding: 20px;
+    }
+    h1 {
+      text-align: center;
+      font-size: 36px;
+      color: #00aaff;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+    }
+    .ip-info {
+      text-align: center;
+      color: #555;
+      font-size: 16px;
+      margin-top: 5px;
+    }
+    .outlet-grid {
+      display: flex;
+      justify-content: space-around;
+      flex-wrap: wrap;
+      margin-top: 30px;
+    }
+    .outlet {
+      border: 4px solid orange;
+      border-radius: 16px;
+      width: 150px;
+      padding: 20px;
+      text-align: center;
+      margin: 10px;
+      background-color: white;
+      transition: all 0.3s ease-in-out;
+    }
+    .outlet.on {
+      border-color: blue;
+    }
+    .outlet-title {
+      font-size: 20px;
+      margin-bottom: 10px;
+    }
+    .switch-btn {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    .switch-on {
+      background-color: white;
+      color: black;
+    }
+    .switch-off {
+      background-color: #333;
+      color: white;
+    }
+    .refresh {
+      display: block;
+      margin: 20px auto;
+      padding: 10px 20px;
+      font-size: 16px;
+      border-radius: 8px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    #log {
+      margin-top: 30px;
+      background-color: #fff;
+      border: 1px solid #ccc;
+      padding: 15px;
+      max-height: 250px;
+      overflow-y: auto;
+      font-size: 14px;
+    }
+    #log button {
+      float: right;
+      margin-bottom: 10px;
+      background: #dc3545;
+      color: white;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <h1>Power Management Unit</h1>
+  <p class="ip-info">IP 位址：<strong id="ip-address">192.168.1.201</strong></p>
+  <p class="ip-info">MAC 位址：<strong id="mac-address">取得中...</strong></p>
+
+  <button class="refresh" onclick="loadInitialStates()">🔁 重新查詢插座狀態</button>
+
+  <div class="outlet-grid">
+    <div class="outlet" id="outlet-1">
+      <div class="outlet-title">插座 1</div>
+      <button class="switch-btn" onclick="toggleOutlet(1)">讀取中...</button>
+    </div>
+    <div class="outlet" id="outlet-2">
+      <div class="outlet-title">插座 2</div>
+      <button class="switch-btn" onclick="toggleOutlet(2)">讀取中...</button>
+    </div>
+    <div class="outlet" id="outlet-3">
+      <div class="outlet-title">插座 3</div>
+      <button class="switch-btn" onclick="toggleOutlet(3)">讀取中...</button>
+    </div>
+    <div class="outlet" id="outlet-4">
+      <div class="outlet-title">插座 4</div>
+      <button class="switch-btn" onclick="toggleOutlet(4)">讀取中...</button>
+    </div>
+  </div>
+
+  <div id="log">
+    <button onclick="clearLog()">清除日誌</button>
+    <div id="log-content"></div>
+  </div>
+
+  <script>
+    const outletStates = { 1: false, 2: false, 3: false, 4: false };
+
+    function log(message) {
+      const now = new Date().toLocaleTimeString();
+      const logEntry = document.createElement("div");
+      logEntry.textContent = `[${now}] ${message}`;
+      document.getElementById("log-content").prepend(logEntry);
+    }
+
+    function toggleOutlet(outlet) {
+      const state = !outletStates[outlet];
+      const ip = document.getElementById("ip-address").innerText;
+      fetch('/api/power/control', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ip: ip, outlet: outlet, state: state ? 'on' : 'off' })
+      })
+      .then(res => res.ok ? res.json() : res.json().then(err => Promise.reject(err.message)))
+      .then(data => {
+        outletStates[outlet] = state;
+        updateUI(outlet, state);
+        log(data.message || `✅ 插座 ${outlet} 控制成功`);
+      })
+      .catch(err => log(`❌ ${err}`));
+    }
+
+    function updateUI(outlet, state) {
+      const outletEl = document.getElementById(`outlet-${outlet}`);
+      const btn = outletEl.querySelector('button');
+
+      outletEl.classList.toggle('on', state);
+      btn.classList.remove('switch-on', 'switch-off');
+      btn.classList.add(state ? 'switch-on' : 'switch-off');
+      btn.textContent = state ? '開啟' : '關閉';
+    }
+
+    function loadInitialStates() {
+      const ip = document.getElementById("ip-address").innerText;
+
+      // 讀取狀態
+      fetch('/api/power/status?ip=' + ip)
+        .then(res => res.ok ? res.json() : Promise.reject('無法取得插座狀態'))
+        .then(data => {
+          for (let outlet = 1; outlet <= 4; outlet++) {
+            outletStates[outlet] = data[`outlet${outlet}`] === true;
+            updateUI(outlet, outletStates[outlet]);
+          }
+          log('✅ 狀態更新完成');
+        })
+        .catch(err => log(`⚠️ ${err}`));
+
+      // 讀取 MAC 位址
+      fetch('/api/power/device-info?ip=' + ip)
+        .then(res => res.ok ? res.json() : Promise.reject('無法取得 MAC'))
+        .then(data => {
+          if (data.macAddress) {
+            document.getElementById('mac-address').innerText = data.macAddress;
+            const source = data.source ? `（來源：${data.source}）` : '';
+            log('📡 取得 MAC 位址成功：' + data.macAddress + ' ' + source);
+          } else {
+            log('⚠️ 無法取得 MAC 位址');
+          }
+        })
+        .catch(err => log(`⚠️ ${err}`));
+    }
+
+    function clearLog() {
+      document.getElementById("log-content").innerHTML = "";
+    }
+
+    window.onload = loadInitialStates;
+  </script>
+</body>
+</html>

@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <title>Synology NAS 安裝 qBittorrent 5.1.1 ＆ Portainer</title>
+  <style>
+    body {
+      font-family: "Noto Sans TC", sans-serif;
+      font-size: 16px;
+      line-height: 1.6;
+      background-color: #f9f9f9;
+      color: #333;
+      padding: 20px;
+    }
+    h1, h2 {
+      color: #003366;
+    }
+    code {
+      background-color: #eee;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: Consolas, monospace;
+    }
+    pre {
+      background-color: #eee;
+      padding: 10px;
+      border-radius: 6px;
+      overflow-x: auto;
+    }
+  </style>
+</head>
+<body>
+
+<h1>Synology NAS qBittorrent 5.1.1 + Portainer 建置程序</h1>
+
+<hr>
+
+<h2>📦 基本前提</h2>
+<ul>
+  <li>DSM 已啟用 Docker 套件</li>
+  <li>NAS 有權限操作 volume2 路徑（如 <code>/volume2/docker/qbittorrent</code>）</li>
+  <li>已安裝 Docker CLI，或可在 DSM Terminal 操作</li>
+</ul>
+
+<hr>
+
+<h2>🚀 步驟一：建立資料夾結構</h2>
+<pre>
+mkdir -p /volume2/docker/qbittorrent/config
+mkdir -p /volume2/docker/qbittorrent/downloads
+mkdir -p /volume2/docker/portainer/data
+</pre>
+
+<hr>
+
+<h2>🧲 步驟二：部署 qBittorrent 5.1.1 (LinuxServer 版)</h2>
+
+<pre>
+docker run -d \
+  --name=qbittorrent \
+  -e PUID=1024 \
+  -e PGID=100 \
+  -e TZ=Asia/Taipei \
+  -e WEBUI_PORT=8080 \
+  -p 6881:6881 \
+  -p 6881:6881/udp \
+  -p 8080:8080 \
+  -v /volume2/docker/qbittorrent/config:/config \
+  -v /volume2/docker/qbittorrent/downloads:/downloads \
+  --restart unless-stopped \
+  lscr.io/linuxserver/qbittorrent:5.1.1
+</pre>
+
+🔹 初始管理頁面： <code>http://NAS_IP:8080</code>  
+🔹 預設帳密： <code>admin / adminadmin</code>
+
+<hr>
+
+<h2>📂 步驟三：部署 Portainer (管理介面)</h2>
+
+<pre>
+docker run -d \
+  -p 9000:9000 \
+  -p 8000:8000 \
+  --name=portainer \
+  --restart=unless-stopped \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  -v /volume2/docker/portainer/data:/data \
+  portainer/portainer-ce
+</pre>
+
+🔹 管理介面網址： <code>http://NAS_IP:9000</code>  
+🔹 初次登入需設定密碼
+
+<hr>
+
+<h2>🔧 其他設定建議</h2>
+<ul>
+  <li>在 DSM 中將上述資料夾權限設定為對應用戶可讀寫</li>
+  <li>若需外部訪問，請設定路由器 Port Forward 對應 Port</li>
+  <li>qBittorrent 可設定下載目錄、種子分類、自動搬移等</li>
+</ul>
+
+<hr>
+
+<h2>🧹 移除指令</h2>
+若需移除容器與資料夾，可執行：
+<pre>
+docker stop qbittorrent portainer
+docker rm qbittorrent portainer
+rm -rf /volume2/docker/qbittorrent
+rm -rf /volume2/docker/portainer
+</pre>
+
+<hr>
+
+<p>© 2025 Synology qBittorrent + Portainer 建置指南</p>
+
+</body>
+</html>

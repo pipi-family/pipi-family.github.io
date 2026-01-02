@@ -1,0 +1,75 @@
+
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <title>Raspberry Pi DuckDNS 自動更新腳本教學</title>
+  <style>
+    body {
+      font-family: "Noto Sans TC", sans-serif;
+      background: #1e1e1e;
+      color: #fff;
+      padding: 2em;
+      max-width: 900px;
+      margin: auto;
+      line-height: 1.7;
+    }
+    h1, h2 {
+      color: #00e0ff;
+    }
+    code, pre {
+      background: #2e2e2e;
+      color: #c2f542;
+      padding: 0.5em;
+      display: block;
+      border-radius: 5px;
+      overflow-x: auto;
+      font-family: "Courier New", monospace;
+      margin-bottom: 1em;
+    }
+    a {
+      color: #00e0ff;
+    }
+  </style>
+</head>
+<body>
+  <h1>📡 Raspberry Pi DuckDNS 自動更新腳本</h1>
+
+  <h2>🧾 1. 建立更新腳本</h2>
+  <pre><code>sudo mkdir -p /opt/duckdns
+sudo nano /opt/duckdns/duckdns_updater.sh</code></pre>
+
+  <p>貼入以下內容：</p>
+  <pre><code>#!/bin/bash
+
+DOMAIN="home-vpn-02"
+TOKEN="483ad0a1-81b1-426f-8d95-17172b5f7ad9"
+URL="https://www.duckdns.org/update?domains=${DOMAIN}&token=${TOKEN}&ip="
+
+LOGFILE="/var/log/duckdns_updater.log"
+
+echo "$(date '+%Y-%m-%d %H:%M:%S') - Updating ${DOMAIN}" >> "$LOGFILE"
+curl -s "$URL" >> "$LOGFILE"
+echo "" >> "$LOGFILE"</code></pre>
+
+  <h2>🔐 2. 設定權限</h2>
+  <pre><code>sudo chmod +x /opt/duckdns/duckdns_updater.sh</code></pre>
+
+  <h2>⏱️ 3. 加入排程 crontab</h2>
+  <pre><code>crontab -e</code></pre>
+  <p>新增一行：</p>
+  <pre><code>*/5 * * * * /opt/duckdns/duckdns_updater.sh</code></pre>
+
+  <h2>🛡️ 可選：僅在 Tailscale 已連線時執行</h2>
+  <p>可加入條件判斷保護：</p>
+  <pre><code>if tailscale status | grep -q "100."; then
+  curl -s "$URL" >> "$LOGFILE"
+else
+  echo "Tailscale disconnected, skipping update." >> "$LOGFILE"
+fi</code></pre>
+
+  <h2>✅ 完成</h2>
+  <p>此腳本將每 5 分鐘自動回報 Raspberry Pi 當前 Public IP 至 DuckDNS，即使 Site-to-Site VPN 掛掉，只要 Tailscale 正常就能遠端查得 B 端位置。</p>
+
+</body>
+</html>

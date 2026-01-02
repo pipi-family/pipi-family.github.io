@@ -1,0 +1,148 @@
+﻿<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EdgeRouter IPSec VPN 設定指南</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 16px;
+            line-height: 1.6;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        h1, h2 {
+            color: #0056b3;
+        }
+        pre {
+            background-color: #f5f5f5;
+            border: 1px solid #ddd;
+            padding: 10px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        .section {
+            margin-bottom: 20px;
+        }
+        .important {
+            background-color: #ffeb3b;
+            padding: 5px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>EdgeRouter IPSec VPN 設定指南</h1>
+
+    <div class="section">
+        <h2>網路參數</h2>
+        <table border="1" cellpadding="5" cellspacing="0">
+            <tr>
+                <th>項目</th>
+                <th>本端（EdgeRouter）</th>
+                <th>對端（Remote Site）</th>
+            </tr>
+            <tr>
+                <td>WAN IP</td>
+                <td>211.128.128.110</td>
+                <td>222.222.222.222</td>
+            </tr>
+            <tr>
+                <td>LAN 網段</td>
+                <td>192.168.1.0/24</td>
+                <td>192.168.2.0/24</td>
+            </tr>
+            <tr>
+                <td>VTI Tunnel IP</td>
+                <td>172.0.0.1</td>
+                <td>172.0.0.2</td>
+            </tr>
+            <tr>
+                <td>預共享金鑰（PSK）</td>
+                <td>MyStrongSecret123</td>
+                <td>—</td>
+            </tr>
+        </table>
+    </div>
+
+    <div class="section">
+        <h2>完整設定指令：EdgeRouter（使用 VTI 模式）</h2>
+
+        <h3>進入設定模式：</h3>
+        <pre>configure</pre>
+
+        <h3>1?? 設定 Phase 1（IKE）參數：</h3>
+        <pre>
+set vpn ipsec ike-group IKE-1 lifetime 3600
+set vpn ipsec ike-group IKE-1 proposal 1 encryption aes256
+set vpn ipsec ike-group IKE-1 proposal 1 hash sha256
+set vpn ipsec ike-group IKE-1 proposal 1 dh-group 14
+        </pre>
+
+        <h3>2?? 設定 Phase 2（ESP）參數：</h3>
+        <pre>
+set vpn ipsec esp-group ESP-1 lifetime 3600
+set vpn ipsec esp-group ESP-1 proposal 1 encryption aes256
+set vpn ipsec esp-group ESP-1 proposal 1 hash sha256
+        </pre>
+
+        <h3>3?? 設定虛擬隧道接口（VTI）：</h3>
+        <pre>
+set interfaces vti vti0 address 172.0.0.1/30
+        </pre>
+
+        <h3>4?? 設定 Site-to-Site VPN Peer：</h3>
+        <pre>
+set vpn ipsec site-to-site peer 222.222.222.222 authentication mode pre-shared-secret
+set vpn ipsec site-to-site peer 222.222.222.222 authentication pre-shared-secret 'MyStrongSecret123'
+set vpn ipsec site-to-site peer 222.222.222.222 ike-group IKE-1
+set vpn ipsec site-to-site peer 222.222.222.222 vti bind vti0
+set vpn ipsec site-to-site peer 222.222.222.222 vti esp-group ESP-1
+set vpn ipsec site-to-site peer 222.222.222.222 local-address 211.128.128.110
+        </pre>
+
+        <h3>5?? 啟用 IP forwarding（確保 VPN 封包可轉送）：</h3>
+        <pre>
+set system ip forwarding
+        </pre>
+
+        <h3>6?? 設定防火牆（允許 IKE、ESP、NAT-T）：</h3>
+        <pre>
+set firewall name WAN_LOCAL rule 10 action accept
+set firewall name WAN_LOCAL rule 10 description "Allow IKE"
+set firewall name WAN_LOCAL rule 10 destination port 500
+set firewall name WAN_LOCAL rule 10 protocol udp
+
+set firewall name WAN_LOCAL rule 20 action accept
+set firewall name WAN_LOCAL rule 20 description "Allow ESP"
+set firewall name WAN_LOCAL rule 20 protocol esp
+
+set firewall name WAN_LOCAL rule 30 action accept
+set firewall name WAN_LOCAL rule 30 description "Allow NAT-T"
+set firewall name WAN_LOCAL rule 30 destination port 4500
+set firewall name WAN_LOCAL rule 30 protocol udp
+        </pre>
+
+        <h3>7?? 儲存並套用設定：</h3>
+        <pre>
+commit
+save
+exit
+        </pre>
+    </div>
+
+    <div class="section important">
+        <h3>額外建議：</h3>
+        <p>若需要設定靜態路由或跑 OSPF，可參考下列指令：</p>
+        <pre>
+set protocols static route 192.168.2.0/24 next-hop 172.0.0.2
+        </pre>
+    </div>
+
+</body>
+</html>

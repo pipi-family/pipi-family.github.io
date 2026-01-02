@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<title>Synology NAS 反向代理設定程序</title>
+<style>
+ body { font-family: Helvetica, Arial, sans-serif; font-size:16pt; margin:0; display:flex; }
+ #sidebar { width:280px; background:#f3f3f3; padding:20px; border-right:1px solid #ccc; }
+ #sidebar a { display:block; margin:10px 0; color:#0366d6; text-decoration:none; }
+ #content { padding:30px; flex:1; }
+ h1, h2, h3 { margin-top:28px; }
+ pre { background:#eee; padding:10px; }
+</style>
+</head>
+<body>
+<div id="sidebar">
+ <h3>快捷項</h3>
+ <a href="#prep">準備條件</a>
+ <a href="#create">建立反向代理</a>
+ <a href="#cert">申請憑證</a>
+ <a href="#test">功能測試</a>
+ <a href="#secure">安全加強</a>
+ <a href="#flow">架構流程</a>
+</div>
+
+<div id="content">
+<h1>Synology NAS 反向代理設定程序</h1>
+<p>適用 DSM 7.x，以 nas.foreverweb.synology.me 為範例。</p>
+
+<h2 id="prep">1. 準備條件</h2>
+<ul>
+ <li>NAS 已可被外網連線。</li>
+ <li>已設定 DDNS，例如：nas.foreverweb.synology.me。</li>
+ <li>DSM 7.x 內建反向代理功能，無需安裝 Web Station。</li>
+</ul>
+
+<h2 id="create">2. 建立反向代理項目</h2>
+<p>控制台 → 入口網站（Application Portal）→ 反向代理伺服器 → 建立</p>
+
+<h3>A. 一般設定（來源端）</h3>
+<pre>
+描述：DSM Reverse Proxy
+來源協定：https
+來源主機名：nas.foreverweb.synology.me
+來源連接埠：443
+</pre>
+
+<h3>B. 目的地設定（後端 DSM）</h3>
+<p>Version A（建議）：</p>
+<pre>
+目的地協定：http
+目的地主機名：127.0.0.1
+目的地連接埠：5000
+</pre>
+
+<p>Version B（全程 HTTPS）：</p>
+<pre>
+目的地協定：https
+目的地主機名：127.0.0.1
+目的地連接埠：5001
+</pre>
+
+<h2 id="cert">3. 申請 Let's Encrypt 憑證（必做）</h2>
+<p>控制台 → 安全性 → 憑證 → 新增 →「從 Let's Encrypt 取得憑證」</p>
+<pre>
+網域名稱：nas.foreverweb.synology.me
+Email：你的 Email
+</pre>
+<p>完成後將憑證套用到 DSM 服務與反向代理項目。</p>
+
+<h2 id="test">4. 測試功能</h2>
+<p>外網開啟以下網址：</p>
+<pre>https://nas.foreverweb.synology.me</pre>
+<ul>
+ <li>應看到 DSM 登入頁。</li>
+ <li>瀏覽器顯示 HTTPS 鎖頭。</li>
+ <li>URL 未顯示 5000/5001。</li>
+</ul>
+
+<h2 id="secure">5. 強化安全設定（建議）</h2>
+<h3>A. 移除外部 5000/5001 Port Forward</h3>
+<p>反向代理已接手，外網僅需 443。</p>
+
+<h3>B. 啟用 2FA</h3>
+<p>控制台 → 使用者與群組 → 使用者 → 安全性 → 兩步驟驗證</p>
+
+<h3>C. 停用 admin 帳號</h3>
+<p>控制台 → 使用者與群組 → 高級設定</p>
+
+<h3>D. 限制登入地區</h3>
+<p>控制台 → 安全性 → 防火牆 → 僅允許特定地區登入</p>
+
+<h2 id="flow">6. 架構流程</h2>
+<pre>
+外部使用者 → HTTPS 443
+→ UCG Fiber Port Forward
+→ Synology 反向代理
+→ 127.0.0.1:5000 或 5001
+→ DSM Web
+</pre>
+
+</div>
+</body>
+</html>

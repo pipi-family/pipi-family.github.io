@@ -1,0 +1,108 @@
+
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <title>WireGuard Site-to-Site VPN 設定指南</title>
+    <style>
+        body {
+            font-family: "Noto Sans TC", sans-serif;
+            background: #f9f9f9;
+            color: #333;
+            padding: 2em;
+            line-height: 1.6;
+            font-size: 16px;
+        }
+        h1, h2 { color: #1a73e8; }
+        pre {
+            background: #f0f0f0;
+            padding: 1em;
+            overflow-x: auto;
+            border-left: 5px solid #1a73e8;
+        }
+        code { font-family: monospace; }
+        .section { margin-bottom: 2em; }
+    </style>
+</head>
+<body>
+    <h1>WireGuard Site-to-Site VPN 設定指南（UDM / UCG）</h1>
+
+    <div class="section">
+        <h2>🔑 金鑰產生方式</h2>
+        <p>在 UDM 或 UCG 上產生 Private Key / Public Key：</p>
+        <pre><code>wg genkey | tee privatekey | wg pubkey > publickey</code></pre>
+        <ul>
+            <li>Private Key：<code>cat privatekey</code></li>
+            <li>Public Key：<code>cat publickey</code></li>
+        </ul>
+    </div>
+
+    <div class="section">
+        <h2>🛠️ 設定步驟</h2>
+        <p>1. SSH 登入 UDM 或 UCG：</p>
+        <pre><code>ssh root@&lt;設備 IP&gt;</code></pre>
+
+        <p>2. 建立 <code>/etc/wireguard/wg0.conf</code> 設定檔：</p>
+
+        <h3>🔹 在 UDM：</h3>
+        <pre><code>[Interface]
+PrivateKey = &lt;UDM 私鑰&gt;
+Address = 192.168.229.1/30
+ListenPort = 51820
+
+[Peer]
+PublicKey = &lt;UCG 公鑰&gt;
+Endpoint = home-vpn-02.duckdns.org:51820
+AllowedIPs = 192.168.2.0/24
+PersistentKeepalive = 25</code></pre>
+
+        <h3>🔹 在 UCG：</h3>
+        <pre><code>[Interface]
+PrivateKey = &lt;UCG 私鑰&gt;
+Address = 192.168.229.2/30
+ListenPort = 51820
+
+[Peer]
+PublicKey = &lt;UDM 公鑰&gt;
+Endpoint = home-vpn-01.duckdns.org:51820
+AllowedIPs = 192.168.1.0/24
+PersistentKeepalive = 25</code></pre>
+    </div>
+
+    <div class="section">
+        <h2>🚀 啟用 WireGuard</h2>
+        <pre><code>wg-quick up wg0</code></pre>
+        <p>檢查狀態：</p>
+        <pre><code>wg show</code></pre>
+    </div>
+
+    <div class="section">
+        <h2>⚙️ 開機自動啟動 & 設定維持</h2>
+        <p>UDM/UCG 重開機後會還原檔案系統，<strong>WireGuard 設定檔與執行狀態會遺失</strong>，需設定自動還原與啟用腳本：</p>
+
+        <h3>1️⃣ 安裝 Boostchicken 的 udm-boot 工具</h3>
+        <pre><code>curl -fsSL https://raw.githubusercontent.com/boostchicken/udm-utilities/master/on-boot-script/install.sh | sh</code></pre>
+
+        <p>此工具會建立 <code>/mnt/data/on_boot.d/</code> 資料夾。</p>
+
+        <h3>2️⃣ 建立自動還原與啟用腳本</h3>
+        <p>建立 <code>/mnt/data/on_boot.d/10-wireguard.sh</code>，內容如下：</p>
+        <pre><code>#!/bin/bash
+
+# 建立 wireguard 資料夾與設定檔
+mkdir -p /etc/wireguard
+cp /mnt/data/wg0.conf /etc/wireguard/wg0.conf
+
+# 啟用 WireGuard
+wg-quick up wg0</code></pre>
+
+        <p>將您的 <code>wg0.conf</code> 備份至 <code>/mnt/data/</code>：</p>
+        <pre><code>cp /etc/wireguard/wg0.conf /mnt/data/wg0.conf</code></pre>
+
+        <p>賦予執行權限：</p>
+        <pre><code>chmod +x /mnt/data/on_boot.d/10-wireguard.sh</code></pre>
+
+        <p>完成後，每次開機會自動還原並啟動 WireGuard 設定。</p>
+    </div>
+</body>
+</html>

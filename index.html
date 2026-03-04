@@ -11,7 +11,7 @@
     <style>
         @import url(//fonts.googleapis.com/css?family=Lato:300:400);
 
-        body { margin: 0; font-family: 'Lato', sans-serif; background-color: #EBEBEB; }
+        body { margin: 0; font-family: 'Lato', sans-serif; background-color: #EBEBEB; overflow-x: hidden; }
         h1 { font-weight: 300; letter-spacing: 2px; font-size: 48px; margin: 0; }
         
         .header {
@@ -28,17 +28,19 @@
         input[type="password"] {
             padding: 12px; border-radius: 25px; border: none; width: 220px;
             outline: none; text-align: center; font-size: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            transition: 0.3s;
         }
+        input[type="password"]:focus { width: 250px; }
+        
         button {
             padding: 10px 30px; margin-top: 15px; border-radius: 25px; border: 2px solid white;
             background: transparent; color: white; cursor: pointer; transition: 0.3s; font-size: 14px; font-weight: bold;
         }
         button:hover { background: white; color: rgba(0,172,193,1); }
+        button:disabled { opacity: 0.5; cursor: wait; }
 
-        /* 書籤注入區 */
-        #content-area { display: none; }
+        #content-area { display: none; width: 100%; }
 
-        /* 解鎖後背景 */
         .unlocked-bg {
             background: #EBEBEB url(background/wallpaper2you_345056.jpg) center center fixed no-repeat !important;
             background-size: cover !important;
@@ -52,7 +54,7 @@
         .parallax > use:nth-child(4) { animation-delay: -5s; animation-duration: 20s; }
         @keyframes move-forever { 0% { transform: translate3d(-90px,0,0); } 100% { transform: translate3d(85px,0,0); } }
 
-        @media (max-width: 768px) { h1 { font-size: 24px; } .inner-header { height: 50vh; } }
+        @media (max-width: 768px) { h1 { font-size: 28px; } .inner-header { height: 50vh; } }
     </style>
 </head>
 <body id="main-body">
@@ -61,9 +63,9 @@
     <div class="inner-header">
         <h1>Private Bookmark</h1>
         <div class="login-container">
-            <input type="password" id="password" placeholder="正在連結雲端驗證..." disabled>
+            <input type="password" id="password" placeholder="正在同步雲端安全協定..." disabled>
             <br>
-            <button id="unlock-btn" onclick="checkPassword()" disabled>CONNECTING</button>
+            <button id="unlock-btn" onclick="checkPassword()" disabled>LOADING</button>
             <p id="msg" style="color: #ffcfcf; font-size: 13px; margin-top: 10px;"></p>
         </div>
     </div>
@@ -78,54 +80,75 @@
 <div id="content-area"></div>
 
 <script>
-    // 已經為您填入正確的雲端 ID
-    const PASS_FILE_ID = "1shqN8CQi70GII2u4oU5iq95M4_CJ-Nug"; 
+    // 雲端 ID 配置
+    const PASS_FILE_ID = "1dvhIyAi_oW7XaEmJv8Nd6VESc0QYBSTO"; 
     const SOURCE_FILE_ID = "1h7_cIUTmWkyYvduiAgs59zEkiQMBB71w"; 
 
     let remotePassword = "";
+    const FALLBACK_PW = "^.^_@_0505"; // 如果連線失敗的備用密碼
 
-    // 初始化：抓取密碼檔
-    fetch(`https://docs.google.com/uc?export=download&id=${PASS_FILE_ID}`)
-        .then(res => res.text())
-        .then(data => {
-            remotePassword = data.trim();
-            document.getElementById('password').disabled = false;
-            document.getElementById('password').placeholder = "輸入解鎖密碼";
-            document.getElementById('unlock-btn').innerText = "UNLOCK";
-            document.getElementById('unlock-btn').disabled = false;
-        })
-        .catch(err => { 
-            document.getElementById('msg').innerText = "雲端連線異常，請檢查權限。"; 
-        });
+    // 初始化連線
+    async function init() {
+        const url = `https://docs.google.com/uc?export=download&id=${PASS_FILE_ID}`;
+        
+        try {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 5000); // 5秒超時
 
-    function checkPassword() {
-        const pw = document.getElementById('password').value;
-        if(pw === remotePassword && remotePassword !== "") {
-            document.getElementById('msg').innerText = "驗證成功，正在讀取書籤...";
+            const res = await fetch(url, { signal: controller.signal });
+            if (!res.ok) throw new Error();
             
-            // 抓取 560 行書籤 source.txt
-            fetch(`https://docs.google.com/uc?export=download&id=${SOURCE_FILE_ID}`)
-                .then(res => res.text())
-                .then(html => {
-                    // 1. 移除登入蓋板
-                    document.getElementById('login-screen').style.display = "none";
-                    // 2. 切換背景樣式
-                    document.getElementById('main-body').classList.add('unlocked-bg');
-                    // 3. 注入書籤內容
-                    const content = document.getElementById('content-area');
-                    content.innerHTML = html;
-                    content.style.display = "block";
-                    window.scrollTo(0,0);
-                })
-                .catch(err => {
-                    document.getElementById('msg').innerText = "書籤內容抓取失敗。";
-                });
-        } else {
-            document.getElementById('msg').innerText = "密碼錯誤，拒絕存取。";
+            const data = await res.text();
+            remotePassword = data.trim();
+            console.log("Cloud Pass Sync: OK");
+        } catch (err) {
+            console.warn("Cloud Sync Failed, using local fallback.");
+            remotePassword = FALLBACK_PW; // 啟用備用密碼
+            document.getElementById('msg').style.color = "#fff";
+            document.getElementById('msg').innerText = "雲端同步受限，已切換至備用驗證模式。";
+        } finally {
+            const pwInput = document.getElementById('password');
+            const btn = document.getElementById('unlock-btn');
+            pwInput.disabled = false;
+            pwInput.placeholder = "輸入解鎖密碼";
+            btn.innerText = "UNLOCK";
+            btn.disabled = false;
         }
     }
 
-    // 支援 Enter 鍵
+    init();
+
+    async function checkPassword() {
+        const pw = document.getElementById('password').value;
+        const msg = document.getElementById('msg');
+
+        if(pw === remotePassword && remotePassword !== "") {
+            msg.style.color = "#fff";
+            msg.innerText = "驗證成功，正在讀取雲端書籤...";
+            
+            try {
+                const res = await fetch(`https://docs.google.com/uc?export=download&id=${SOURCE_FILE_ID}`);
+                if (!res.ok) throw new Error();
+                const html = await res.text();
+
+                // 執行畫面切換
+                document.getElementById('login-screen').style.display = "none";
+                document.getElementById('main-body').classList.add('unlocked-bg');
+                
+                const content = document.getElementById('content-area');
+                content.innerHTML = html;
+                content.style.display = "block";
+                
+                window.scrollTo(0,0);
+            } catch (err) {
+                msg.innerText = "書籤內容抓取失敗，請檢查網路連線。";
+            }
+        } else {
+            msg.style.color = "#ffcfcf";
+            msg.innerText = "密碼錯誤，請重新輸入。";
+        }
+    }
+
     document.getElementById('password').onkeydown = e => { if(e.keyCode == 13) checkPassword(); };
 </script>
 </body>

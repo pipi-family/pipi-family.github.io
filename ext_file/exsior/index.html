@@ -1,132 +1,184 @@
 <!DOCTYPE html>
-<html lang="zh-Hant">
+<html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="robots" content="noindex, nofollow">
-    <title>Private Dashboard</title>
-    
-    <link rel="stylesheet" href="index_files/css3menu1/style.css" type="text/css" />
-
+    <title>TOYOTA T190 CORONA EXSIOR</title>
     <style>
-        @import url(//fonts.googleapis.com/css?family=Lato:300:400);
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: "微軟正黑體", Arial, sans-serif; }
 
-        body { margin: 0; font-family: 'Lato', sans-serif; background-color: #EBEBEB; }
-        h1 { font-weight: 300; letter-spacing: 2px; font-size: 48px; margin: 0; }
-        
-        .header {
+        /* 背景底圖 */
+        .hero {
             position: relative;
-            text-align: center;
-            background: linear-gradient(60deg, rgba(84,58,183,1) 0%, rgba(0,172,193,1) 100%);
+            height: 100vh;
+            background: url("img/hero.JPG") center/cover no-repeat fixed;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        /* 深色遮罩 - 稍微加深一點點，讓中文標題更突出 */
+        .hero::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 1;
+        }
+
+        .content {
+            position: relative;
             color: white;
-            z-index: 1000;
-        }
-        .inner-header { height: 60vh; width: 100%; display: flex; justify-content: center; align-items: center; flex-direction: column; }
-        .waves { position: relative; width: 100%; height: 15vh; margin-bottom: -7px; min-height: 100px; max-height: 150px; }
-
-        .login-container { margin-top: 20px; }
-        input[type="password"] {
-            padding: 12px; border-radius: 25px; border: none; width: 220px;
-            outline: none; text-align: center; font-size: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-        }
-        button {
-            padding: 10px 30px; margin-top: 15px; border-radius: 25px; border: 2px solid white;
-            background: transparent; color: white; cursor: pointer; transition: 0.3s; font-size: 14px; font-weight: bold;
-        }
-        button:hover { background: white; color: rgba(0,172,193,1); }
-
-        /* 書籤注入區 */
-        #content-area { display: none; }
-
-        /* 解鎖後背景 */
-        .unlocked-bg {
-            background: #EBEBEB url(background/wallpaper2you_345056.jpg) center center fixed no-repeat !important;
-            background-size: cover !important;
-            min-height: 100vh;
+            text-align: center;
+            z-index: 2;
+            transition: all 0.6s cubic-bezier(0.19, 1, 0.22, 1);
         }
 
-        .parallax > use { animation: move-forever 25s cubic-bezier(.55,.5,.45,.5) infinite; }
-        .parallax > use:nth-child(1) { animation-delay: -2s; animation-duration: 7s; }
-        .parallax > use:nth-child(2) { animation-delay: -3s; animation-duration: 10s; }
-        .parallax > use:nth-child(3) { animation-delay: -4s; animation-duration: 13s; }
-        .parallax > use:nth-child(4) { animation-delay: -5s; animation-duration: 20s; }
-        @keyframes move-forever { 0% { transform: translate3d(-90px,0,0); } 100% { transform: translate3d(85px,0,0); } }
+        /* 當資料開啟時，標題與按鈕的縮放與上移 */
+        .content.mini {
+            transform: translateY(-40vh) scale(0.85);
+            opacity: 0.9;
+        }
 
-        @media (max-width: 768px) { h1 { font-size: 24px; } .inner-header { height: 50vh; } }
+        h1 { font-size: 52px; letter-spacing: 3px; text-shadow: 0 4px 15px rgba(0,0,0,0.8); }
+        h2 { margin-top: 10px; font-weight: normal; color: #f0a500; letter-spacing: 1px; }
+
+        .buttons { margin-top: 50px; }
+
+        .btn {
+            display: inline-block;
+            margin: 10px;
+            padding: 16px 32px;
+            background: #f0a500;
+            color: #000;
+            text-decoration: none;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            border: 2px solid transparent;
+            font-size: 18px;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+
+        .btn:hover { 
+            background: #ffd000; 
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(240, 165, 0, 0.4);
+        }
+
+        /* 資料顯示視窗 (Iframe Container) */
+        #data-viewer {
+            position: absolute;
+            bottom: -100%; 
+            left: 50%;
+            transform: translateX(-50%);
+            width: 98%; /* 寬度增加 */
+            max-width: 1300px;
+            height: 85vh; /* 高度增加 */
+            background: rgba(255, 255, 255, 0.98);
+            z-index: 10;
+            border-radius: 20px 20px 0 0;
+            box-shadow: 0 -15px 40px rgba(0,0,0,0.7);
+            transition: bottom 0.6s cubic-bezier(0.19, 1, 0.22, 1);
+            overflow: hidden;
+        }
+
+        #data-viewer.active { bottom: 0; }
+
+        /* 關閉按鈕 - 優化外型 */
+        .close-btn {
+            position: absolute;
+            right: 25px;
+            top: 20px;
+            font-size: 28px;
+            color: #fff;
+            cursor: pointer;
+            z-index: 12;
+            background: #333;
+            width: 45px;
+            height: 45px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: 0.3s;
+        }
+
+        .close-btn:hover { background: #f0a500; color: #000; transform: rotate(90deg); }
+
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            padding-top: 20px; /* 內容頂部間距 */
+        }
+
+        /* 內容載入前的過渡底色 */
+        .iframe-bg {
+            background: #fff;
+            height: 100%;
+            width: 100%;
+        }
+
+        @media(max-width:768px){
+            h1 { font-size: 32px; }
+            h2 { font-size: 16px; }
+            .content.mini { transform: translateY(-42vh) scale(0.8); }
+            #data-viewer { height: 82vh; width: 100%; border-radius: 15px 15px 0 0; }
+            .btn { padding: 12px 20px; font-size: 16px; display: block; width: 80%; margin: 10px auto; }
+        }
     </style>
 </head>
-<body id="main-body">
 
-<div id="login-screen" class="header">
-    <div class="inner-header">
-        <h1>Private Bookmark</h1>
-        <div class="login-container">
-            <input type="password" id="password" placeholder="正在連結雲端驗證..." disabled>
-            <br>
-            <button id="unlock-btn" onclick="checkPassword()" disabled>CONNECTING</button>
-            <p id="msg" style="color: #ffcfcf; font-size: 13px; margin-top: 10px;"></p>
+<body>
+
+<section class="hero">
+    <div class="content" id="main-content">
+        <h1>TOYOTA CORONA EXSIOR</h1>
+        <h2>AHTEG 2.0 GLi 電氣維修技術手冊</h2>
+
+        <div class="buttons">
+            <button onclick="openData('fuses.html')" class="btn">車內保險絲</button>
+            <button onclick="openData('bulbs.html')" class="btn">全車燈泡規格</button>
+            <button onclick="openData('manual.html')" class="btn">車型諸元規格</button>
         </div>
     </div>
-    <svg class="waves" viewBox="0 24 150 28" preserveAspectRatio="none" shape-rendering="auto">
-        <defs><path id="gw" d="M-160 44c30 0 58-18 88-18s 58 18 88 18 58-18 88-18 58 18 88 18 v44h-352z" /></defs>
-        <g class="parallax">
-            <use xlink:href="#gw" x="48" y="0" fill="rgba(255,255,255,0.7" /><use xlink:href="#gw" x="48" y="3" fill="rgba(255,255,255,0.5)" /><use xlink:href="#gw" x="48" y="5" fill="rgba(255,255,255,0.3)" /><use xlink:href="#gw" x="48" y="7" fill="#fff" />
-        </g>
-    </svg>
-</div>
 
-<div id="content-area"></div>
+    <div id="data-viewer">
+        <div class="close-btn" onclick="closeData()">×</div>
+        <div class="iframe-bg">
+            <iframe id="info-frame" src=""></iframe>
+        </div>
+    </div>
+</section>
 
 <script>
-    // 已經為您填入正確的雲端 ID
-    const PASS_FILE_ID = "1shqN8CQi70GII2u4oU5iq95M4_CJ-Nug"; 
-    const SOURCE_FILE_ID = "1h7_cIUTmWkyYvduiAgs59zEkiQMBB71w"; 
+    function openData(url) {
+        const viewer = document.getElementById('data-viewer');
+        const frame = document.getElementById('info-frame');
+        const content = document.getElementById('main-content');
 
-    let remotePassword = "";
-
-    // 初始化：抓取密碼檔
-    fetch(`https://docs.google.com/uc?export=download&id=${PASS_FILE_ID}`)
-        .then(res => res.text())
-        .then(data => {
-            remotePassword = data.trim();
-            document.getElementById('password').disabled = false;
-            document.getElementById('password').placeholder = "輸入解鎖密碼";
-            document.getElementById('unlock-btn').innerText = "UNLOCK";
-            document.getElementById('unlock-btn').disabled = false;
-        })
-        .catch(err => { 
-            document.getElementById('msg').innerText = "雲端連線異常，請檢查權限。"; 
-        });
-
-    function checkPassword() {
-        const pw = document.getElementById('password').value;
-        if(pw === remotePassword && remotePassword !== "") {
-            document.getElementById('msg').innerText = "驗證成功，正在讀取書籤...";
-            
-            // 抓取 560 行書籤 source.txt
-            fetch(`https://docs.google.com/uc?export=download&id=${SOURCE_FILE_ID}`)
-                .then(res => res.text())
-                .then(html => {
-                    // 1. 移除登入蓋板
-                    document.getElementById('login-screen').style.display = "none";
-                    // 2. 切換背景樣式
-                    document.getElementById('main-body').classList.add('unlocked-bg');
-                    // 3. 注入書籤內容
-                    const content = document.getElementById('content-area');
-                    content.innerHTML = html;
-                    content.style.display = "block";
-                    window.scrollTo(0,0);
-                })
-                .catch(err => {
-                    document.getElementById('msg').innerText = "書籤內容抓取失敗。";
-                });
-        } else {
-            document.getElementById('msg').innerText = "密碼錯誤，拒絕存取。";
-        }
+        // 先設定 URL 再開啟動畫
+        frame.src = url;
+        viewer.classList.add('active');
+        content.classList.add('mini'); 
     }
 
-    // 支援 Enter 鍵
-    document.getElementById('password').onkeydown = e => { if(e.keyCode == 13) checkPassword(); };
+    function closeData() {
+        const viewer = document.getElementById('data-viewer');
+        const content = document.getElementById('main-content');
+
+        viewer.classList.remove('active');
+        content.classList.remove('mini');
+        
+        // 動畫結束後清空 iframe，節省效能
+        setTimeout(() => {
+            document.getElementById('info-frame').src = "";
+        }, 600);
+    }
 </script>
+
 </body>
 </html>

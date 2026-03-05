@@ -3,12 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="robots" content="noindex, nofollow">
     <title>Beta Testing - Private Dashboard</title>
-    
     <link rel="stylesheet" href="index_files/css3menu1/style.css" type="text/css" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
-
     <style>
         @import url(//fonts.googleapis.com/css?family=Lato:300:400);
         body { margin: 0; font-family: 'Lato', sans-serif; background-color: #EBEBEB; }
@@ -18,16 +15,9 @@
         .login-container { margin-top: 20px; }
         input[type="password"] { padding: 12px; border-radius: 25px; border: none; width: 220px; outline: none; text-align: center; font-size: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
         button { padding: 10px 30px; margin-top: 15px; border-radius: 25px; border: 2px solid white; background: transparent; color: white; cursor: pointer; transition: 0.3s; font-size: 14px; font-weight: bold; }
-        button:hover { background: white; color: rgba(0,172,193,1); }
+        button:hover:not(:disabled) { background: white; color: rgba(0,172,193,1); }
         #content-area { display: none; }
-        
-        /* 抓取解鎖後的背景圖案 */
-        .unlocked-bg { 
-            background: #EBEBEB url(background/wallpaper2you_345056.jpg) center center fixed no-repeat !important; 
-            background-size: cover !important; 
-            min-height: 100vh; 
-        }
-
+        .unlocked-bg { background: #EBEBEB url(background/wallpaper2you_345056.jpg) center center fixed no-repeat !important; background-size: cover !important; min-height: 100vh; }
         .parallax > use { animation: move-forever 25s cubic-bezier(.55,.5,.45,.5) infinite; }
         @keyframes move-forever { 0% { transform: translate3d(-90px,0,0); } 100% { transform: translate3d(85px,0,0); } }
     </style>
@@ -38,7 +28,7 @@
     <div class="inner-header">
         <h1>Private Bookmark <span style="font-size: 12px; vertical-align: middle;">(BETA)</span></h1>
         <div class="login-container">
-            <input type="password" id="password" placeholder="正在連結雲端..." disabled>
+            <input type="password" id="password" placeholder="正在嘗試強制同步..." disabled>
             <br>
             <button id="unlock-btn" onclick="checkPassword()" disabled>CONNECTING</button>
             <p id="msg" style="color: #ffcfcf; font-size: 13px; margin-top: 10px;"></p>
@@ -60,20 +50,42 @@
 
     let hashedKey = "";
 
+    // 使用替代下載方式繞過預覽限制
     async function init() {
-        const url = `https://docs.google.com/uc?export=download&id=${PASS_JSON_ID}`;
-        try {
-            const res = await fetch(url);
-            const data = await res.json();
-            hashedKey = data.hash; // 對應 pass.json 中的 hash 欄位 
-            
-            document.getElementById('password').disabled = false;
-            document.getElementById('password').placeholder = "輸入解鎖密碼";
-            document.getElementById('unlock-btn').innerText = "UNLOCK";
-            document.getElementById('unlock-btn').disabled = false;
-        } catch (err) {
-            document.getElementById('msg').innerText = "雲端同步失敗，請檢查權限。";
+        // 多種網址格式重試
+        const urls = [
+            `https://docs.google.com/uc?export=download&id=${PASS_JSON_ID}`,
+            `https://drive.google.com/uc?id=${PASS_JSON_ID}&export=download`
+        ];
+        
+        for (let url of urls) {
+            try {
+                const res = await fetch(url);
+                if (!res.ok) continue;
+                const text = await res.text();
+                // 強制解析 JSON（防止 Google 傳回 HTML 警告頁）
+                const data = JSON.parse(text.substring(text.indexOf('{'), text.lastIndexOf('}') + 1));
+                hashedKey = data.hash;
+                
+                if(hashedKey) {
+                    enableInput();
+                    return;
+                }
+            } catch (err) {
+                console.warn("Attempt failed, trying next URL format...");
+            }
         }
+        document.getElementById('msg').innerText = "雲端連線失敗，請確認 Google Drive 權限已設為『檢視者』且『知道連結的任何人』。";
+    }
+
+    function enableInput() {
+        const pwInput = document.getElementById('password');
+        const btn = document.getElementById('unlock-btn');
+        pwInput.disabled = false;
+        pwInput.placeholder = "輸入解鎖密碼";
+        btn.innerText = "UNLOCK";
+        btn.disabled = false;
+        document.getElementById('msg').innerText = "";
     }
 
     async function checkPassword() {
@@ -81,20 +93,18 @@
         const inputHashed = CryptoJS.SHA256(input).toString();
 
         if(inputHashed === hashedKey) {
-            document.getElementById('msg').innerText = "驗證成功，正在載入書籤...";
-            
+            document.getElementById('msg').innerText = "驗證成功，正在載入內容...";
             try {
                 const res = await fetch(`https://docs.google.com/uc?export=download&id=${SOURCE_HTML_ID}`);
                 const html = await res.text();
-
+                
                 document.getElementById('login-screen').style.display = "none";
                 document.getElementById('main-body').classList.add('unlocked-bg');
-                const content = document.getElementById('content-area');
-                content.innerHTML = html;
-                content.style.display = "block";
+                document.getElementById('content-area').innerHTML = html;
+                document.getElementById('content-area').style.display = "block";
                 window.scrollTo(0,0);
             } catch (err) {
-                document.getElementById('msg').innerText = "書籤載入失敗。";
+                document.getElementById('msg').innerText = "書籤內容載入失敗。";
             }
         } else {
             document.getElementById('msg').innerText = "密碼錯誤。";

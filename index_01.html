@@ -28,9 +28,9 @@
     <div class="inner-header">
         <h1>Private Bookmark <span style="font-size: 12px; vertical-align: middle;">(BETA)</span></h1>
         <div class="login-container">
-            <input type="password" id="password" placeholder="正在嘗試強制同步..." disabled>
+            <input type="password" id="password" placeholder="請輸入解鎖密碼">
             <br>
-            <button id="unlock-btn" onclick="checkPassword()" disabled>CONNECTING</button>
+            <button id="unlock-btn" onclick="checkPassword()">UNLOCK</button>
             <p id="msg" style="color: #ffcfcf; font-size: 13px; margin-top: 10px;"></p>
         </div>
     </div>
@@ -45,74 +45,43 @@
 <div id="content-area"></div>
 
 <script>
-    const PASS_JSON_ID = "1KrW-Vh2i6YmaT2Uo1_4JiG-3OzXR0Owe"; 
+    // 您的 source.html ID
     const SOURCE_HTML_ID = "1G1p60Ha8Zh5_0wz-aqPUBorIKf3WqnoG"; 
-
-    let hashedKey = "";
-
-    // 使用替代下載方式繞過預覽限制
-    async function init() {
-        // 多種網址格式重試
-        const urls = [
-            `https://docs.google.com/uc?export=download&id=${PASS_JSON_ID}`,
-            `https://drive.google.com/uc?id=${PASS_JSON_ID}&export=download`
-        ];
-        
-        for (let url of urls) {
-            try {
-                const res = await fetch(url);
-                if (!res.ok) continue;
-                const text = await res.text();
-                // 強制解析 JSON（防止 Google 傳回 HTML 警告頁）
-                const data = JSON.parse(text.substring(text.indexOf('{'), text.lastIndexOf('}') + 1));
-                hashedKey = data.hash;
-                
-                if(hashedKey) {
-                    enableInput();
-                    return;
-                }
-            } catch (err) {
-                console.warn("Attempt failed, trying next URL format...");
-            }
-        }
-        document.getElementById('msg').innerText = "雲端連線失敗，請確認 Google Drive 權限已設為『檢視者』且『知道連結的任何人』。";
-    }
-
-    function enableInput() {
-        const pwInput = document.getElementById('password');
-        const btn = document.getElementById('unlock-btn');
-        pwInput.disabled = false;
-        pwInput.placeholder = "輸入解鎖密碼";
-        btn.innerText = "UNLOCK";
-        btn.disabled = false;
-        document.getElementById('msg').innerText = "";
-    }
+    // 密碼 ^.^_@_0505 的 SHA256 驗證碼 (寫死在代碼中是安全的)
+    const HASHED_KEY = "b6a06657871e9565507981882f09405f6e864819d9b04f76239f60f699049449";
 
     async function checkPassword() {
         const input = document.getElementById('password').value;
         const inputHashed = CryptoJS.SHA256(input).toString();
+        const msg = document.getElementById('msg');
 
-        if(inputHashed === hashedKey) {
-            document.getElementById('msg').innerText = "驗證成功，正在載入內容...";
+        if(inputHashed === HASHED_KEY) {
+            msg.style.color = "#fff";
+            msg.innerText = "驗證成功，正在從雲端抓取書籤...";
+            
+            // 嘗試抓取雲端 source.html
             try {
                 const res = await fetch(`https://docs.google.com/uc?export=download&id=${SOURCE_HTML_ID}`);
+                if (!res.ok) throw new Error();
                 const html = await res.text();
                 
+                // 成功載入：切換畫面
                 document.getElementById('login-screen').style.display = "none";
                 document.getElementById('main-body').classList.add('unlocked-bg');
                 document.getElementById('content-area').innerHTML = html;
                 document.getElementById('content-area').style.display = "block";
                 window.scrollTo(0,0);
             } catch (err) {
-                document.getElementById('msg').innerText = "書籤內容載入失敗。";
+                msg.style.color = "#ffcfcf";
+                msg.innerText = "連線成功但內容抓取失敗。請確認 source.html 權限為『知道連結的任何人』。";
             }
         } else {
-            document.getElementById('msg').innerText = "密碼錯誤。";
+            msg.style.color = "#ffcfcf";
+            msg.innerText = "密碼錯誤。";
         }
     }
 
     document.getElementById('password').onkeydown = e => { if(e.keyCode == 13) checkPassword(); };
-    init();
 </script>
 </body>
 </html>

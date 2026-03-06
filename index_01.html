@@ -1,66 +1,102 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
-<title>Private</title>
-
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>Private Bookmark</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
-
+<style>
+body{margin:0;font-family:'Lato',sans-serif;background:#EBEBEB;}
+.header{position:relative;text-align:center;background:linear-gradient(60deg,#543ab7 0%,#00acc1 100%);color:white;}
+.inner-header{height:60vh;display:flex;flex-direction:column;justify-content:center;align-items:center;}
+h1{font-weight:300;letter-spacing:2px;font-size:40px;margin:0;}
+.login-container{margin-top:20px;}
+input[type=password]{padding:12px;border-radius:25px;border:none;width:220px;text-align:center;font-size:16px;outline:none;box-shadow:0 4px 15px rgba(0,0,0,0.2);}
+button{padding:10px 30px;margin-top:15px;border-radius:25px;border:2px solid white;background:transparent;color:white;cursor:pointer;transition:.3s;font-weight:bold;}
+button:hover{background:white;color:#00acc1;}
+#msg{color:#ffdede;font-size:13px;margin-top:10px;}
+#content-area{display:none;}
+.unlocked-bg{background:#EBEBEB url(background/wallpaper2you_345056.jpg) center center fixed no-repeat;background-size:cover;min-height:100vh;}
+.waves{position:relative;width:100%;height:15vh;margin-bottom:-7px;min-height:100px;max-height:150px;}
+.parallax>use{animation:move-forever 25s cubic-bezier(.55,.5,.45,.5) infinite;}
+.parallax>use:nth-child(1){animation-delay:-2s;animation-duration:7s;}
+.parallax>use:nth-child(2){animation-delay:-3s;animation-duration:10s;}
+.parallax>use:nth-child(3){animation-delay:-4s;animation-duration:13s;}
+.parallax>use:nth-child(4){animation-delay:-5s;animation-duration:20s;}
+@keyframes move-forever{0%{transform:translate3d(-90px,0,0)}100%{transform:translate3d(85px,0,0)}}
+</style>
 </head>
+<body id="main-body">
 
-<body>
+<div id="login-screen" class="header">
+  <div class="inner-header">
+    <h1>Private Bookmark</h1>
+    <div class="login-container">
+      <input type="password" id="password" placeholder="正在連結雲端..." disabled>
+      <br>
+      <button id="unlock-btn" onclick="checkPassword()" disabled>CONNECTING</button>
+      <p id="msg"></p>
+    </div>
+  </div>
+  <svg class="waves" viewBox="0 24 150 28" preserveAspectRatio="none">
+    <defs><path id="gw" d="M-160 44c30 0 58-18 88-18s58 18 88 18 58-18 88-18 58 18 88 18 v44h-352z"/></defs>
+    <g class="parallax">
+      <use xlink:href="#gw" x="48" y="0" fill="rgba(255,255,255,0.7)"/>
+      <use xlink:href="#gw" x="48" y="3" fill="rgba(255,255,255,0.5)"/>
+      <use xlink:href="#gw" x="48" y="5" fill="rgba(255,255,255,0.3)"/>
+      <use xlink:href="#gw" x="48" y="7" fill="#fff"/>
+    </g>
+  </svg>
+</div>
 
-<h2>Private Bookmark</h2>
-
-<input type="password" id="pw">
-<button onclick="login()">Unlock</button>
-
-<p id="msg"></p>
-
-<div id="content"></div>
+<div id="content-area"></div>
 
 <script>
-
-const PASS_ID="1KrW-Vh2i6YmaT2Uo1_4JiG-3OzXR0Owe"
-const SRC_ID="1G1p60Ha8Zh5_0wz-aqPUBorIKf3WqnoG"
-
-let HASH=""
+const PASS_JSON_ID="1KrW-Vh2i6YmaT2Uo1_4JiG-3OzXR0Owe";
+const SOURCE_HTML_ID="1G1p60Ha8Zh5_0wz-aqPUBorIKf3WqnoG";
+let hashedKey="";
 
 async function init(){
-
-let r=await fetch("https://drive.google.com/uc?export=download&id="+PASS_ID)
-
-let j=await r.json()
-
-HASH=j.hash
-
+  try{
+    const res=await fetch(`https://docs.google.com/uc?export=download&id=${PASS_JSON_ID}`);
+    const data=await res.json();
+    hashedKey=data.hash;
+    document.getElementById("password").disabled=false;
+    document.getElementById("password").placeholder="輸入密碼";
+    document.getElementById("unlock-btn").innerText="UNLOCK";
+    document.getElementById("unlock-btn").disabled=false;
+  }catch(e){
+    document.getElementById("msg").innerText="pass.json 讀取失敗";
+    console.error("pass.json ERROR:",e);
+  }
 }
 
-async function login(){
-
-let input=document.getElementById("pw").value
-
-let h=CryptoJS.SHA256(input).toString()
-
-if(h==HASH){
-
-let r=await fetch("https://drive.google.com/uc?export=download&id="+SRC_ID)
-
-let html=await r.text()
-
-document.getElementById("content").innerHTML=html
-
-}else{
-
-document.getElementById("msg").innerText="Wrong Password"
-
+async function checkPassword(){
+  const input=document.getElementById("password").value;
+  const inputHash=CryptoJS.SHA256(input).toString();
+  if(inputHash===hashedKey){
+    document.getElementById("msg").innerText="密碼正確，載入書籤";
+    try{
+      const res=await fetch(`https://docs.google.com/uc?export=download&id=${SOURCE_HTML_ID}`);
+      const html=await res.text();
+      document.getElementById("login-screen").style.display="none";
+      document.getElementById("main-body").classList.add("unlocked-bg");
+      const content=document.getElementById("content-area");
+      content.innerHTML=html;
+      content.style.display="block";
+      window.scrollTo(0,0);
+    }catch(e){
+      document.getElementById("msg").innerText="source.html 載入失敗";
+      console.error("source.html ERROR:",e);
+    }
+  }else{
+    document.getElementById("msg").innerText="Wrong Password";
+  }
 }
 
-}
-
-init()
-
+document.getElementById("password").onkeydown=function(e){if(e.keyCode==13)checkPassword();};
+init();
 </script>
-
 </body>
 </html>

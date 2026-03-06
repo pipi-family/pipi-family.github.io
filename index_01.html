@@ -2,9 +2,11 @@
 <html lang="zh-Hant">
 
 <head>
+
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="robots" content="noindex,nofollow">
+
 <title>Private Bookmark</title>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
@@ -13,11 +15,12 @@
 
 body{
 margin:0;
-font-family:sans-serif;
+font-family:Arial,Helvetica,sans-serif;
 background:#EBEBEB;
 }
 
 .header{
+position:relative;
 height:60vh;
 display:flex;
 justify-content:center;
@@ -25,28 +28,43 @@ align-items:center;
 flex-direction:column;
 background:linear-gradient(60deg,#543ab7,#00acc1);
 color:white;
+text-align:center;
 }
 
 input{
 padding:12px;
-border-radius:20px;
+border-radius:25px;
 border:none;
-width:200px;
+width:220px;
 text-align:center;
+font-size:16px;
 }
 
 button{
 margin-top:15px;
-padding:10px 25px;
-border-radius:20px;
+padding:10px 30px;
+border-radius:25px;
 border:2px solid white;
 background:transparent;
 color:white;
 cursor:pointer;
+font-weight:bold;
+}
+
+button:hover{
+background:white;
+color:#00acc1;
 }
 
 #content{
 display:none;
+min-height:100vh;
+}
+
+#msg{
+font-size:13px;
+margin-top:10px;
+color:#ffdede;
 }
 
 </style>
@@ -59,11 +77,15 @@ display:none;
 
 <h1>Private Bookmark</h1>
 
-<input type="password" id="pw" placeholder="Connecting..." disabled>
+<input
+type="password"
+id="password"
+placeholder="Connecting..."
+disabled>
 
 <br>
 
-<button id="btn" disabled>CONNECTING</button>
+<button id="unlockBtn" disabled>CONNECTING</button>
 
 <p id="msg"></p>
 
@@ -73,36 +95,42 @@ display:none;
 
 <script>
 
-/* Drive File ID */
+/* --------------------
+   Cloud file location
+-------------------- */
 
-const PASS_ID="1KrW-Vh2i6YmaT2Uo1_4JiG-3OzXR0Owe"
-const SOURCE_ID="1G1p60Ha8Zh5_0wz-aqPUBorIKf3WqnoG"
+const PASS_URL="pass.json"
 
-/* Proxy URL */
+const SOURCE_URL=
+"https://drive.google.com/uc?export=download&id=1G1p60Ha8Zh5_0wz-aqPUBorIKf3WqnoG"
 
-const PASS_URL=`https://drive.googleusercontent.com/uc?id=${PASS_ID}`
-const SOURCE_URL=`https://drive.googleusercontent.com/uc?id=${SOURCE_ID}`
+/* --------------------
+   Variables
+-------------------- */
 
 let HASH=""
 
-/* 初始化 */
+let attempt=0
+
+/* --------------------
+   Init
+-------------------- */
 
 async function init(){
 
 try{
 
 let r=await fetch(PASS_URL)
-let t=await r.text()
 
-let data=JSON.parse(t)
+let data=await r.json()
 
 HASH=data.hash
 
-pw.disabled=false
-pw.placeholder="輸入解鎖密碼"
+password.disabled=false
+password.placeholder="輸入解鎖密碼"
 
-btn.disabled=false
-btn.innerText="UNLOCK"
+unlockBtn.disabled=false
+unlockBtn.innerText="UNLOCK"
 
 }catch(e){
 
@@ -112,41 +140,72 @@ msg.innerText="pass.json 讀取失敗"
 
 }
 
-/* 驗證 */
+/* --------------------
+   Unlock
+-------------------- */
 
 async function unlock(){
 
-let input=pw.value
-let h=CryptoJS.SHA256(input).toString()
+if(attempt>5){
 
-if(h!==HASH){
-
-msg.innerText="Wrong Password"
+msg.innerText="Too many attempts"
 return
 
 }
 
-msg.innerText="Loading..."
+let input=password.value
+
+let hash=CryptoJS.SHA256(input).toString()
+
+if(hash!==HASH){
+
+attempt++
+
+msg.innerText="Wrong Password"
+
+return
+
+}
+
+msg.innerText="Loading bookmarks..."
+
+try{
 
 let r=await fetch(SOURCE_URL)
+
 let html=await r.text()
 
 login.style.display="none"
 
 content.innerHTML=html
+
 content.style.display="block"
+
+window.scrollTo(0,0)
+
+}catch(e){
+
+msg.innerText="source.html 載入失敗"
 
 }
 
-/* Enter */
+}
 
-document.addEventListener("keydown",e=>{
+/* --------------------
+   Enter key
+-------------------- */
+
+password.addEventListener("keydown",e=>{
 
 if(e.key==="Enter") unlock()
 
 })
 
-btn.onclick=unlock
+unlockBtn.onclick=unlock
+
+/* --------------------
+   Start
+-------------------- */
 
 init()
 

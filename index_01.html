@@ -1,268 +1,147 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
-
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex,nofollow">
+    <title>Private Bookmark</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="robots" content="noindex,nofollow">
+    <style>
+        @import url(//fonts.googleapis.com/css?family=Lato:300:400);
+        body { margin: 0; font-family: 'Lato', sans-serif; background: #EBEBEB; }
 
-<title>Private Bookmark</title>
+        /* Header 與 背景漸層 */
+        .header {
+            position: relative;
+            text-align: center;
+            background: linear-gradient(60deg, #543ab7 0%, #00acc1 100%);
+            color: white;
+        }
+        .inner-header {
+            height: 60vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+        /* 登入樣式 */
+        input {
+            padding: 12px; border-radius: 25px; border: none;
+            width: 220px; text-align: center; font-size: 16px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2); outline: none;
+        }
+        button {
+            padding: 10px 30px; margin-top: 15px; border-radius: 25px;
+            border: 2px solid white; background: transparent; color: white;
+            cursor: pointer; font-weight: bold; transition: 0.3s;
+        }
+        button:hover:not(:disabled) { background: white; color: #00acc1; }
+        button:disabled { opacity: 0.5; cursor: wait; }
+        #msg { font-size: 13px; margin-top: 10px; color: #ffdede; min-height: 1.2em; }
 
-<style>
+        /* 波浪動畫 */
+        .waves { position: relative; width: 100%; height: 15vh; margin-bottom: -7px; min-height: 100px; max-height: 150px; }
+        .parallax > use { animation: move-forever 25s cubic-bezier(.55,.5,.45,.5) infinite; }
+        .parallax > use:nth-child(1) { animation-delay: -2s; animation-duration: 7s; }
+        .parallax > use:nth-child(2) { animation-delay: -3s; animation-duration: 10s; }
+        .parallax > use:nth-child(3) { animation-delay: -4s; animation-duration: 13s; }
+        .parallax > use:nth-child(4) { animation-delay: -5s; animation-duration: 20s; }
+        @keyframes move-forever { 0% { transform: translate3d(-90px,0,0); } 100% { transform: translate3d(85px,0,0); } }
 
-@import url(//fonts.googleapis.com/css?family=Lato:300:400);
-
-body{
-margin:0;
-font-family:'Lato',sans-serif;
-}
-
-/* header */
-
-.header{
-position:relative;
-text-align:center;
-background:linear-gradient(60deg,#543ab7 0%,#00acc1 100%);
-color:white;
-}
-
-.inner-header{
-height:60vh;
-display:flex;
-justify-content:center;
-align-items:center;
-flex-direction:column;
-}
-
-/* login */
-
-input{
-padding:12px;
-border-radius:25px;
-border:none;
-width:220px;
-text-align:center;
-font-size:16px;
-}
-
-button{
-padding:10px 30px;
-margin-top:15px;
-border-radius:25px;
-border:2px solid white;
-background:transparent;
-color:white;
-cursor:pointer;
-font-weight:bold;
-}
-
-button:hover{
-background:white;
-color:#00acc1;
-}
-
-#msg{
-font-size:13px;
-margin-top:10px;
-color:#ffdede;
-}
-
-/* waves */
-
-.waves{
-position:relative;
-width:100%;
-height:15vh;
-margin-bottom:-7px;
-min-height:100px;
-max-height:150px;
-}
-
-.parallax>use{
-animation:move-forever 25s cubic-bezier(.55,.5,.45,.5) infinite;
-}
-
-.parallax>use:nth-child(1){
-animation-delay:-2s;
-animation-duration:7s;
-}
-
-.parallax>use:nth-child(2){
-animation-delay:-3s;
-animation-duration:10s;
-}
-
-.parallax>use:nth-child(3){
-animation-delay:-4s;
-animation-duration:13s;
-}
-
-.parallax>use:nth-child(4){
-animation-delay:-5s;
-animation-duration:20s;
-}
-
-@keyframes move-forever{
-0%{transform:translate3d(-90px,0,0)}
-100%{transform:translate3d(85px,0,0)}
-}
-
-/* content */
-
-#content{
-display:none;
-min-height:100vh;
-background:#EBEBEB;
-}
-
-iframe{
-width:100%;
-height:100vh;
-border:none;
-}
-
-</style>
-
+        /* 內容區 */
+        #content { display: none; width: 100%; height: 100vh; overflow: hidden; }
+        iframe { width: 100%; height: 100%; border: none; }
+    </style>
 </head>
 
 <body>
 
 <div id="login" class="header">
+    <div class="inner-header">
+        <h1>Private Bookmark</h1>
+        <div style="margin-top: 20px;">
+            <input type="password" id="password" placeholder="Syncing cloud..." disabled>
+            <br>
+            <button id="unlockBtn" disabled>CONNECTING</button>
+            <p id="msg"></p>
+        </div>
+    </div>
 
-<div class="inner-header">
-
-<h1>Private Bookmark</h1>
-
-<input
-type="password"
-id="password"
-placeholder="Connecting..."
-disabled>
-
-<br>
-
-<button id="unlockBtn" disabled>CONNECTING</button>
-
-<p id="msg"></p>
-
-</div>
-
-<svg class="waves"
-xmlns="http://www.w3.org/2000/svg"
-viewBox="0 24 150 28"
-preserveAspectRatio="none">
-
-<defs>
-
-<path id="wave"
-d="M-160 44c30 0 58-18 88-18s58 18 88 18 58-18 88-18 58 18 88 18v44h-352z"/>
-
-</defs>
-
-<g class="parallax">
-
-<use href="#wave" x="48" y="0" fill="rgba(255,255,255,0.7)"/>
-<use href="#wave" x="48" y="3" fill="rgba(255,255,255,0.5)"/>
-<use href="#wave" x="48" y="5" fill="rgba(255,255,255,0.3)"/>
-<use href="#wave" x="48" y="7" fill="#fff"/>
-
-</g>
-
-</svg>
-
+    <svg class="waves" xmlns="http://www.w3.org/2000/svg" viewBox="0 24 150 28" preserveAspectRatio="none">
+        <defs><path id="wave" d="M-160 44c30 0 58-18 88-18s58 18 88 18 58-18 88-18 58 18 88 18v44h-352z"/></defs>
+        <g class="parallax">
+            <use href="#wave" x="48" y="0" fill="rgba(255,255,255,0.7)"/>
+            <use href="#wave" x="48" y="3" fill="rgba(255,255,255,0.5)"/>
+            <use href="#wave" x="48" y="5" fill="rgba(255,255,255,0.3)"/>
+            <use href="#wave" x="48" y="7" fill="#fff"/>
+        </g>
+    </svg>
 </div>
 
 <div id="content"></div>
 
 <script>
+    /* Google Drive IDs */
+    const PASS_JSON_ID = "1KrW-Vh2i6YmaT2Uo1_4JiG-3OzXR0Owe";
+    const SOURCE_ID = "1G1p60Ha8Zh5_0wz-aqPUBorIKf3WqnoG";
 
-/* cloud files */
+    let CORRECT_HASH = "";
+    let attempts = 0;
 
-const PASS_URL="pass.json"
+    /* 初始化：取得密碼雜湊值 */
+    async function init() {
+        const url = `https://docs.google.com/uc?export=download&id=${PASS_JSON_ID}`;
+        try {
+            const r = await fetch(url);
+            const data = await r.json();
+            // 支援您 pass.json 裡的 "hash" 欄位
+            CORRECT_HASH = data.hash || data.key; 
 
-const SOURCE_ID="1G1p60Ha8Zh5_0wz-aqPUBorIKf3WqnoG"
+            password.disabled = false;
+            password.placeholder = "輸入解鎖密碼";
+            unlockBtn.disabled = false;
+            unlockBtn.innerText = "UNLOCK";
+        } catch (e) {
+            msg.innerText = "雲端同步失敗，請檢查 pass.json 權限";
+        }
+    }
 
-/* vars */
+    /* 解鎖功能 */
+    function unlock() {
+        if (attempts >= 5) {
+            msg.innerText = "嘗試次數過多，請稍後再試";
+            return;
+        }
 
-let HASH=""
-let attempt=0
+        const input = password.value;
+        const inputHash = CryptoJS.SHA256(input).toString();
 
-/* init */
+        if (inputHash !== CORRECT_HASH) {
+            attempts++;
+            msg.innerText = `密碼錯誤 (剩餘 ${5 - attempts} 次嘗試)`;
+            password.value = "";
+            return;
+        }
 
-async function init(){
+        /* 驗證成功：加載內容 */
+        login.style.display = "none";
+        content.style.display = "block";
+        
+        // 渲染嵌入式 Google Drive 頁面
+        content.innerHTML = `<iframe src="https://drive.google.com/file/d/${SOURCE_ID}/preview"></iframe>`;
+    }
 
-try{
+    /* 事件監聽 */
+    password.addEventListener("keydown", e => {
+        if (e.key === "Enter") unlock();
+    });
 
-let r=await fetch(PASS_URL)
-let data=await r.json()
+    unlockBtn.onclick = unlock;
 
-HASH=data.hash
-
-password.disabled=false
-password.placeholder="輸入解鎖密碼"
-
-unlockBtn.disabled=false
-unlockBtn.innerText="UNLOCK"
-
-}catch(e){
-
-msg.innerText="pass.json 讀取失敗"
-
-}
-
-}
-
-/* unlock */
-
-function unlock(){
-
-if(attempt>5){
-
-msg.innerText="Too many attempts"
-return
-
-}
-
-let input=password.value
-
-let hash=CryptoJS.SHA256(input).toString()
-
-if(hash!==HASH){
-
-attempt++
-msg.innerText="Wrong Password"
-return
-
-}
-
-/* load source */
-
-login.style.display="none"
-
-content.style.display="block"
-
-content.innerHTML=
-`<iframe src="https://drive.google.com/file/d/${SOURCE_ID}/preview"></iframe>`
-
-}
-
-/* enter key */
-
-password.addEventListener("keydown",e=>{
-
-if(e.key==="Enter") unlock()
-
-})
-
-unlockBtn.onclick=unlock
-
-init()
-
+    init();
 </script>
 
 </body>
-
 </html>

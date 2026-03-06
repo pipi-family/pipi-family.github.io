@@ -13,23 +13,31 @@
 
 <style>
 
+@import url(//fonts.googleapis.com/css?family=Lato:300:400);
+
 body{
 margin:0;
-font-family:Arial,Helvetica,sans-serif;
-background:#EBEBEB;
+font-family:'Lato',sans-serif;
 }
+
+/* header */
 
 .header{
 position:relative;
+text-align:center;
+background:linear-gradient(60deg,#543ab7 0%,#00acc1 100%);
+color:white;
+}
+
+.inner-header{
 height:60vh;
 display:flex;
 justify-content:center;
 align-items:center;
 flex-direction:column;
-background:linear-gradient(60deg,#543ab7,#00acc1);
-color:white;
-text-align:center;
 }
+
+/* login */
 
 input{
 padding:12px;
@@ -41,8 +49,8 @@ font-size:16px;
 }
 
 button{
-margin-top:15px;
 padding:10px 30px;
+margin-top:15px;
 border-radius:25px;
 border:2px solid white;
 background:transparent;
@@ -56,15 +64,64 @@ background:white;
 color:#00acc1;
 }
 
-#content{
-display:none;
-min-height:100vh;
-}
-
 #msg{
 font-size:13px;
 margin-top:10px;
 color:#ffdede;
+}
+
+/* waves */
+
+.waves{
+position:relative;
+width:100%;
+height:15vh;
+margin-bottom:-7px;
+min-height:100px;
+max-height:150px;
+}
+
+.parallax>use{
+animation:move-forever 25s cubic-bezier(.55,.5,.45,.5) infinite;
+}
+
+.parallax>use:nth-child(1){
+animation-delay:-2s;
+animation-duration:7s;
+}
+
+.parallax>use:nth-child(2){
+animation-delay:-3s;
+animation-duration:10s;
+}
+
+.parallax>use:nth-child(3){
+animation-delay:-4s;
+animation-duration:13s;
+}
+
+.parallax>use:nth-child(4){
+animation-delay:-5s;
+animation-duration:20s;
+}
+
+@keyframes move-forever{
+0%{transform:translate3d(-90px,0,0)}
+100%{transform:translate3d(85px,0,0)}
+}
+
+/* content */
+
+#content{
+display:none;
+min-height:100vh;
+background:#EBEBEB;
+}
+
+iframe{
+width:100%;
+height:100vh;
+border:none;
 }
 
 </style>
@@ -74,6 +131,8 @@ color:#ffdede;
 <body>
 
 <div id="login" class="header">
+
+<div class="inner-header">
 
 <h1>Private Bookmark</h1>
 
@@ -91,37 +150,53 @@ disabled>
 
 </div>
 
+<svg class="waves"
+xmlns="http://www.w3.org/2000/svg"
+viewBox="0 24 150 28"
+preserveAspectRatio="none">
+
+<defs>
+
+<path id="wave"
+d="M-160 44c30 0 58-18 88-18s58 18 88 18 58-18 88-18 58 18 88 18v44h-352z"/>
+
+</defs>
+
+<g class="parallax">
+
+<use href="#wave" x="48" y="0" fill="rgba(255,255,255,0.7)"/>
+<use href="#wave" x="48" y="3" fill="rgba(255,255,255,0.5)"/>
+<use href="#wave" x="48" y="5" fill="rgba(255,255,255,0.3)"/>
+<use href="#wave" x="48" y="7" fill="#fff"/>
+
+</g>
+
+</svg>
+
+</div>
+
 <div id="content"></div>
 
 <script>
 
-/* --------------------
-   Cloud file location
--------------------- */
+/* cloud files */
 
 const PASS_URL="pass.json"
 
-const SOURCE_URL=
-"https://drive.google.com/uc?export=download&id=1G1p60Ha8Zh5_0wz-aqPUBorIKf3WqnoG"
+const SOURCE_ID="1G1p60Ha8Zh5_0wz-aqPUBorIKf3WqnoG"
 
-/* --------------------
-   Variables
--------------------- */
+/* vars */
 
 let HASH=""
-
 let attempt=0
 
-/* --------------------
-   Init
--------------------- */
+/* init */
 
 async function init(){
 
 try{
 
 let r=await fetch(PASS_URL)
-
 let data=await r.json()
 
 HASH=data.hash
@@ -140,11 +215,9 @@ msg.innerText="pass.json 讀取失敗"
 
 }
 
-/* --------------------
-   Unlock
--------------------- */
+/* unlock */
 
-async function unlock(){
+function unlock(){
 
 if(attempt>5){
 
@@ -160,40 +233,23 @@ let hash=CryptoJS.SHA256(input).toString()
 if(hash!==HASH){
 
 attempt++
-
 msg.innerText="Wrong Password"
-
 return
 
 }
 
-msg.innerText="Loading bookmarks..."
-
-try{
-
-let r=await fetch(SOURCE_URL)
-
-let html=await r.text()
+/* load source */
 
 login.style.display="none"
 
-content.innerHTML=html
-
 content.style.display="block"
 
-window.scrollTo(0,0)
-
-}catch(e){
-
-msg.innerText="source.html 載入失敗"
+content.innerHTML=
+`<iframe src="https://drive.google.com/file/d/${SOURCE_ID}/preview"></iframe>`
 
 }
 
-}
-
-/* --------------------
-   Enter key
--------------------- */
+/* enter key */
 
 password.addEventListener("keydown",e=>{
 
@@ -203,13 +259,10 @@ if(e.key==="Enter") unlock()
 
 unlockBtn.onclick=unlock
 
-/* --------------------
-   Start
--------------------- */
-
 init()
 
 </script>
 
 </body>
+
 </html>

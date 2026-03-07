@@ -2,89 +2,97 @@
 <html lang="zh-Hant">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex,nofollow">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
     <title>Private Bookmark</title>
 
-    <link rel="shortcut icon" href="/favicon/favicon.ico" type="image/x-icon">
-    <link rel="icon" href="/favicon/favicon.ico" type="image/x-icon">
+    <link rel="shortcut icon" href="/favicon/favicon.ico">
     <link rel="icon" type="image/gif" href="/favicon/animated_favicon1.gif">
+    <link rel="icon" href="/favicon/favicon.ico" type="image/x-icon">
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 
-<style>
-    /* 修正 body 與 header 讓背景全螢幕 */
-    body { margin: 0; font-family: 'Lato', sans-serif; background: #fff; overflow-x: hidden; }
-    
-    .header {
-        position: relative;
-        text-align: center;
-        background: linear-gradient(60deg, #543ab7 0%, #00acc1 100%);
-        color: white;
-        /* 改為 100vh 確保波浪從最底部開始 */
-        height: 100vh;
-        margin: 0;
-        padding: 0;
-        display: flex;
-        flex-direction: column;
-    }
+    <style>
+        body { margin: 0; font-family: Arial; background: #fff; }
 
-    .inner-header {
-        flex: 1; /* 自動填滿上方空間 */
-        width: 100%;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        flex-direction: column;
-    }
+        /* header 調整為 100vh 消除灰色底塊 */
+        .header {
+            position: relative;
+            text-align: center;
+            background: linear-gradient(60deg, #543ab7, #00acc1);
+            color: white;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
 
-    /* 波浪樣式修正 */
-    .waves {
-        position: relative;
-        width: 100%;
-        height: 15vh;
-        margin-bottom: -1px; /* 消除與底部的細微縫隙 */
-        min-height: 100px;
-        max-height: 150px;
-    }
+        .inner-header {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
 
-    /* 6層波浪動畫設定 */
-    .parallax > use { animation: move-forever 25s cubic-bezier(.55,.5,.45,.5) infinite; }
-    
-    .parallax > use:nth-child(1) { animation-delay: -2s; animation-duration: 7s; }
-    .parallax > use:nth-child(2) { animation-delay: -3s; animation-duration: 10s; }
-    .parallax > use:nth-child(3) { animation-delay: -4s; animation-duration: 13s; }
-    .parallax > use:nth-child(4) { animation-delay: -5s; animation-duration: 20s; }
-    .parallax > use:nth-child(5) { animation-delay: -6s; animation-duration: 15s; } /* 新增層5 */
-    .parallax > use:nth-child(6) { animation-delay: -7s; animation-duration: 25s; } /* 新增層6 */
+        /* input */
+        input {
+            padding: 12px; border-radius: 25px; border: none;
+            width: 240px; text-align: center; font-size: 16px;
+            outline: none; box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
 
-    @keyframes move-forever {
-        0% { transform: translate3d(-90px,0,0); }
-        100% { transform: translate3d(85px,0,0); }
-    }
+        button {
+            padding: 10px 30px; margin-top: 15px; border-radius: 25px;
+            border: 2px solid white; background: transparent;
+            color: white; font-weight: bold; cursor: pointer; transition: 0.3s;
+        }
+        button:hover { background: white; color: #00acc1; }
 
-    /* 登入介面微調 */
-    .login-box { z-index: 10; }
-    #content-area { display: none; width: 100%; min-height: 100vh; }
-</style>
+        #msg { margin-top: 10px; font-size: 14px; color: #ffdede; min-height: 1.2em; }
 
+        /* waves 調整為 6 層並貼合底部 */
+        .waves {
+            position: relative;
+            width: 100%;
+            height: 15vh;
+            margin-bottom: -5px;
+            min-height: 100px;
+            max-height: 150px;
+        }
+
+        .parallax > use { animation: move 25s cubic-bezier(.55,.5,.45,.5) infinite; }
+        .parallax > use:nth-child(1) { animation-delay: -2s; animation-duration: 7s; }
+        .parallax > use:nth-child(2) { animation-delay: -3s; animation-duration: 10s; }
+        .parallax > use:nth-child(3) { animation-delay: -4s; animation-duration: 13s; }
+        .parallax > use:nth-child(4) { animation-delay: -5s; animation-duration: 20s; }
+        .parallax > use:nth-child(5) { animation-delay: -6s; animation-duration: 15s; } /* 新增層5 */
+        .parallax > use:nth-child(6) { animation-delay: -7s; animation-duration: 25s; } /* 新增層6 */
+
+        @keyframes move {
+            0% { transform: translate3d(-90px,0,0); }
+            100% { transform: translate3d(85px,0,0); }
+        }
+
+        /* 內容顯示區 */
+        #content-main { display: none; width: 100%; min-height: 100vh; }
+    </style>
 </head>
 
 <body>
 
-<div id="login-ui" class="header">
+<div id="login-screen" class="header">
     <div class="inner-header">
         <h1>Private Bookmark</h1>
-        <div class="login-box">
-            <input type="password" id="password" placeholder="請輸入密碼">
-            <br>
-            <button id="unlockBtn" onclick="unlock()">UNLOCK</button>
-            <p id="msg"></p>
-        </div>
+        <input type="password" id="password" placeholder="Connecting..." disabled>
+        <br>
+        <button id="unlockBtn" disabled>CONNECTING</button>
+        <p id="msg"></p>
     </div>
 
     <svg class="waves" xmlns="http://www.w3.org/2000/svg" viewBox="0 24 150 28" preserveAspectRatio="none">
-        <defs><path id="wave" d="M-160 44c30 0 58-18 88-18s58 18 88 18 58-18 88-18 58 18 88 18v44h-352z"/></defs>
+        <defs><path id="wave" d="M-160 44c30 0 58-18 88-18s58 18 88 18 58-18 88-18 58 18 88 18 v44h-352z"/></defs>
         <g class="parallax">
             <use href="#wave" x="48" y="0" fill="rgba(255,255,255,0.6)"/>
             <use href="#wave" x="48" y="2" fill="rgba(255,255,255,0.4)"/>
@@ -95,65 +103,86 @@
         </g>
     </svg>
 </div>
-<div id="content-area"></div>
+
+<div id="content-main"></div>
 
 <script>
-    // 密碼雜湊碼 (^.^_@_0505)
-    const CORRECT_HASH = "b6a06657871e9565507981882f09405f6e864819d9b04f76239f60f699049449";
-    // 您的 source.json 檔案 ID
-    const JSON_FILE_ID = "1GaBrL5ZFgOEXRJvoChS_S0XmiK99UdYj";
+    /* 檔案路徑與 ID */
+    const PASS_URL = "pass.json";
+    const SOURCE_URL = "https://docs.google.com/uc?export=download&id=1GaBrL5ZFgOEXRJvoChS_S0XmiK99UdYj";
 
-    let attempts = 0;
+    let HASH = "";
+    let attempt = 0;
 
-    async function unlock() {
-        const pw = document.getElementById('password').value;
-        const hash = CryptoJS.SHA256(pw).toString();
-        const msg = document.getElementById('msg');
+    async function init() {
+        try {
+            let r = await fetch(PASS_URL);
+            let data = await r.json();
+            HASH = data.hash;
 
-        if (attempts >= 5) {
-            msg.innerText = "嘗試次數過多，請稍後再試";
-            return;
-        }
-
-        if (hash === CORRECT_HASH) {
-            msg.innerText = "驗證成功，正在同步內容...";
-            
-            try {
-                // 1. 從 Google Drive 抓取 JSON
-                const url = `https://docs.google.com/uc?export=download&id=${JSON_FILE_ID}`;
-                const res = await fetch(url);
-                const data = await res.json();
-                
-                // 2. 穩定版 Base64 解碼 (支援 UTF-8 中文)
-                const base64Content = data.content;
-                const decodedHtml = decodeURIComponent(atob(base64Content).split('').map(function(c) {
-                    return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-                }).join(''));
-
-                // 3. 隱藏登入介面並注入內容
-                document.getElementById('login-ui').style.display = "none";
-                const contentArea = document.getElementById('content-area');
-                contentArea.style.display = "block";
-                contentArea.innerHTML = decodedHtml;
-                
-                // 捲動至頂部
-                window.scrollTo(0,0);
-
-            } catch (e) {
-                msg.innerText = "內容還原失敗，請檢查 JSON 權限或格式。";
-                console.error("Error details:", e);
-            }
-        } else {
-            attempts++;
-            msg.innerText = `密碼錯誤 (剩餘 ${5 - attempts} 次嘗試)`;
-            document.getElementById('password').value = "";
+            document.getElementById('password').disabled = false;
+            document.getElementById('password').placeholder = "輸入密碼";
+            document.getElementById('unlockBtn').disabled = false;
+            document.getElementById('unlockBtn').innerText = "UNLOCK";
+        } catch (e) {
+            document.getElementById('msg').innerText = "pass.json 讀取失敗";
         }
     }
 
-    // 監聽 Enter 鍵
+    function unlock() {
+        if (attempt >= 5) {
+            document.getElementById('msg').innerText = "Too many attempts";
+            return;
+        }
+
+        const input = document.getElementById('password').value;
+        const hash = CryptoJS.SHA256(input).toString();
+
+        if (hash !== HASH) {
+            attempt++;
+            document.getElementById('msg').innerText = `Wrong Password (剩餘 ${5 - attempt} 次)`;
+            return;
+        }
+
+        loadSource();
+    }
+
+    async function loadSource() {
+        const msg = document.getElementById('msg');
+        msg.innerText = "Synchronizing...";
+
+        try {
+            const r = await fetch(SOURCE_URL);
+            const json = await r.json();
+            
+            // 讀取新的 JSON 結構中的 "data" 欄位
+            const base64Data = json.data;
+
+            // 支援中文的 Base64 解碼方式
+            const html = decodeURIComponent(atob(base64Data).split('').map(function(c) {
+                return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+            }).join(''));
+
+            // 渲染內容
+            document.getElementById('login-screen').style.display = "none";
+            const main = document.getElementById('content-main');
+            main.style.display = "block";
+            main.innerHTML = html;
+            window.scrollTo(0, 0);
+
+        } catch (e) {
+            msg.innerText = "source.json 載入失敗，請檢查權限";
+            console.error(e);
+        }
+    }
+
     document.getElementById('password').addEventListener("keydown", e => {
         if (e.key === "Enter") unlock();
     });
+
+    document.getElementById('unlockBtn').onclick = unlock;
+
+    init();
 </script>
 
 </body>

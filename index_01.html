@@ -4,24 +4,27 @@
 <head>
 
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="robots" content="noindex,nofollow">
-    <link rel="shortcut icon" href="/favicon/favicon.ico">
-    <link rel="icon" type="image/gif" href="/favicon/animated_favicon1.gif">
-    <link rel="shortcut icon" href="/favicon/favicon.ico" type="image/x-icon" />
-    <link rel="icon" href="/favicon/favicon.ico" type="image/x-icon" />
+<meta name="robots" content="noindex,nofollow">    
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
 <title>Private Bookmark</title>
+
+<!-- favicon -->
+<link rel="shortcut icon" href="/favicon/favicon.ico">
+<link rel="icon" type="image/gif" href="/favicon/animated_favicon1.gif">
+<link rel="icon" href="/favicon/favicon.ico" type="image/x-icon">
+
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 
 <style>
 
-@import url(//fonts.googleapis.com/css?family=Lato:300:400);
-
 body{
 margin:0;
-font-family:'Lato',sans-serif;
+font-family:Arial;
 }
+
+/* header */
 
 .header{
 position:relative;
@@ -29,6 +32,8 @@ text-align:center;
 background:linear-gradient(60deg,#543ab7,#00acc1);
 color:white;
 }
+
+/* content */
 
 .inner-header{
 height:60vh;
@@ -38,24 +43,28 @@ align-items:center;
 flex-direction:column;
 }
 
+/* input */
+
 input{
 padding:12px;
 border-radius:25px;
 border:none;
-width:220px;
+width:240px;
 text-align:center;
 font-size:16px;
 }
 
 button{
+
 padding:10px 30px;
 margin-top:15px;
 border-radius:25px;
 border:2px solid white;
 background:transparent;
 color:white;
-cursor:pointer;
 font-weight:bold;
+cursor:pointer;
+
 }
 
 button:hover{
@@ -63,34 +72,52 @@ background:white;
 color:#00acc1;
 }
 
+/* message */
+
 #msg{
-font-size:13px;
 margin-top:10px;
+font-size:14px;
 color:#ffdede;
 }
 
-/* wave */
+/* waves */
 
 .waves{
 position:relative;
 width:100%;
 height:15vh;
 margin-bottom:-7px;
+min-height:100px;
+max-height:150px;
 }
 
-.parallax>use{
-animation:move 25s infinite;
+.parallax > use {
+animation:move 25s cubic-bezier(.55,.5,.45,.5) infinite;
+}
+
+.parallax > use:nth-child(1){
+animation-delay:-2s;
+animation-duration:7s;
+}
+
+.parallax > use:nth-child(2){
+animation-delay:-3s;
+animation-duration:10s;
+}
+
+.parallax > use:nth-child(3){
+animation-delay:-4s;
+animation-duration:13s;
+}
+
+.parallax > use:nth-child(4){
+animation-delay:-5s;
+animation-duration:20s;
 }
 
 @keyframes move{
-0%{transform:translateX(-90px)}
-100%{transform:translateX(85px)}
-}
-
-#content{
-display:none;
-background:#EBEBEB;
-min-height:100vh;
+0%{transform:translate3d(-90px,0,0)}
+100%{transform:translate3d(85px,0,0)}
 }
 
 </style>
@@ -99,7 +126,7 @@ min-height:100vh;
 
 <body>
 
-<div id="login" class="header">
+<div class="header">
 
 <div class="inner-header">
 
@@ -119,25 +146,31 @@ disabled>
 
 </div>
 
-<svg class="waves" viewBox="0 24 150 28">
+<svg class="waves"
+xmlns="http://www.w3.org/2000/svg"
+viewBox="0 24 150 28"
+preserveAspectRatio="none">
 
 <defs>
+
 <path id="wave"
-d="M-160 44c30 0 58-18 88-18s58 18 88 18 58-18 88-18 58 18 88 18v44h-352z"/>
+d="M-160 44c30 0 58-18 88-18s58 18 88 18
+58-18 88-18 58 18 88 18 v44h-352z"/>
+
 </defs>
 
 <g class="parallax">
+
 <use href="#wave" x="48" y="0" fill="rgba(255,255,255,0.7)"/>
 <use href="#wave" x="48" y="3" fill="rgba(255,255,255,0.5)"/>
 <use href="#wave" x="48" y="5" fill="rgba(255,255,255,0.3)"/>
 <use href="#wave" x="48" y="7" fill="#fff"/>
+
 </g>
 
 </svg>
 
 </div>
-
-<div id="content"></div>
 
 <script>
 
@@ -145,27 +178,28 @@ d="M-160 44c30 0 58-18 88-18s58 18 88 18 58-18 88-18 58 18 88 18v44h-352z"/>
 
 const PASS_URL="pass.json"
 
+/* Google Drive source.html */
+
 const SOURCE_URL=
-"https://drive.google.com/uc?export=download&id=1G1p60Ha8Zh5_0wz-aqPUBorIKf3WqnoG"
+"https://drive.google.com/file/d/1G1p60Ha8Zh5_0wz-aqPUBorIKf3WqnoG/view"
 
 /* vars */
 
 let HASH=""
 let attempt=0
 
-/* init */
-
 async function init(){
 
 try{
 
 let r=await fetch(PASS_URL)
+
 let data=await r.json()
 
 HASH=data.hash
 
 password.disabled=false
-password.placeholder="輸入解鎖密碼"
+password.placeholder="輸入密碼"
 
 unlockBtn.disabled=false
 unlockBtn.innerText="UNLOCK"
@@ -178,9 +212,7 @@ msg.innerText="pass.json 讀取失敗"
 
 }
 
-/* unlock */
-
-async function unlock(){
+function unlock(){
 
 if(attempt>5){
 
@@ -196,32 +228,16 @@ let hash=CryptoJS.SHA256(input).toString()
 if(hash!==HASH){
 
 attempt++
+
 msg.innerText="Wrong Password"
+
 return
 
 }
 
-msg.innerText="Loading bookmarks..."
+/* 成功 → 跳轉 */
 
-try{
-
-let r=await fetch(SOURCE_URL)
-
-let html=await r.text()
-
-login.style.display="none"
-
-content.innerHTML=html
-
-content.style.display="block"
-
-window.scrollTo(0,0)
-
-}catch(e){
-
-msg.innerText="source.html 載入失敗"
-
-}
+window.location.href=SOURCE_URL
 
 }
 
@@ -236,4 +252,5 @@ init()
 </script>
 
 </body>
+
 </html>

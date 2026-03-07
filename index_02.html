@@ -14,9 +14,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 
     <style>
-        body { margin: 0; font-family: Arial; background: #fff; }
+        body { margin: 0; font-family: Arial; background: #fff; overflow-x: hidden; }
 
-        /* header 調整為 100vh 消除灰色底塊 */
         .header {
             position: relative;
             text-align: center;
@@ -25,7 +24,6 @@
             height: 100vh;
             display: flex;
             flex-direction: column;
-            overflow: hidden;
         }
 
         .inner-header {
@@ -36,7 +34,6 @@
             flex-direction: column;
         }
 
-        /* input */
         input {
             padding: 12px; border-radius: 25px; border: none;
             width: 240px; text-align: center; font-size: 16px;
@@ -46,20 +43,19 @@
         button {
             padding: 10px 30px; margin-top: 15px; border-radius: 25px;
             border: 2px solid white; background: transparent;
-            color: white; font-weight: bold; cursor: pointer; transition: 0.3s;
+            color: white; font-weight: bold; cursor: pointer;
         }
-        button:hover { background: white; color: #00acc1; }
 
         #msg { margin-top: 10px; font-size: 14px; color: #ffdede; min-height: 1.2em; }
 
-        /* waves 調整為 6 層並貼合底部 */
+        /* 波浪高度回升與優化 */
         .waves {
             position: relative;
             width: 100%;
-            height: 15vh;
-            margin-bottom: -5px;
-            min-height: 100px;
-            max-height: 150px;
+            height: 25vh; /* 增加波浪高度 */
+            margin-bottom: -1px;
+            min-height: 150px;
+            max-height: 250px;
         }
 
         .parallax > use { animation: move 25s cubic-bezier(.55,.5,.45,.5) infinite; }
@@ -67,15 +63,14 @@
         .parallax > use:nth-child(2) { animation-delay: -3s; animation-duration: 10s; }
         .parallax > use:nth-child(3) { animation-delay: -4s; animation-duration: 13s; }
         .parallax > use:nth-child(4) { animation-delay: -5s; animation-duration: 20s; }
-        .parallax > use:nth-child(5) { animation-delay: -6s; animation-duration: 15s; } /* 新增層5 */
-        .parallax > use:nth-child(6) { animation-delay: -7s; animation-duration: 25s; } /* 新增層6 */
+        .parallax > use:nth-child(5) { animation-delay: -6s; animation-duration: 15s; }
+        .parallax > use:nth-child(6) { animation-delay: -7s; animation-duration: 25s; }
 
         @keyframes move {
             0% { transform: translate3d(-90px,0,0); }
             100% { transform: translate3d(85px,0,0); }
         }
 
-        /* 內容顯示區 */
         #content-main { display: none; width: 100%; min-height: 100vh; }
     </style>
 </head>
@@ -87,15 +82,15 @@
         <h1>Private Bookmark</h1>
         <input type="password" id="password" placeholder="Connecting..." disabled>
         <br>
-        <button id="unlockBtn" disabled>CONNECTING</button>
+        <button id="unlockBtn" disabled onclick="unlock()">CONNECTING</button>
         <p id="msg"></p>
     </div>
 
     <svg class="waves" xmlns="http://www.w3.org/2000/svg" viewBox="0 24 150 28" preserveAspectRatio="none">
         <defs><path id="wave" d="M-160 44c30 0 58-18 88-18s58 18 88 18 58-18 88-18 58 18 88 18 v44h-352z"/></defs>
         <g class="parallax">
-            <use href="#wave" x="48" y="0" fill="rgba(255,255,255,0.6)"/>
-            <use href="#wave" x="48" y="2" fill="rgba(255,255,255,0.4)"/>
+            <use href="#wave" x="48" y="0" fill="rgba(255,255,255,0.5)"/>
+            <use href="#wave" x="48" y="2" fill="rgba(255,255,255,0.3)"/>
             <use href="#wave" x="48" y="4" fill="rgba(255,255,255,0.2)"/>
             <use href="#wave" x="48" y="6" fill="rgba(255,255,255,0.4)"/>
             <use href="#wave" x="48" y="8" fill="rgba(255,255,255,0.3)"/>
@@ -107,9 +102,9 @@
 <div id="content-main"></div>
 
 <script>
-    /* 檔案路徑與 ID */
     const PASS_URL = "pass.json";
-    const SOURCE_URL = "https://docs.google.com/uc?export=download&id=1GaBrL5ZFgOEXRJvoChS_S0XmiK99UdYj";
+    // 您的 source.json 檔案 ID
+    const JSON_FILE_ID = "1GaBrL5ZFgOEXRJvoChS_S0XmiK99UdYj";
 
     let HASH = "";
     let attempt = 0;
@@ -151,19 +146,20 @@
         const msg = document.getElementById('msg');
         msg.innerText = "Synchronizing...";
 
+        // 使用 URLSearchParams 構建請求網址，並確保強制下載
+        const url = `https://docs.google.com/uc?export=download&id=${JSON_FILE_ID}`;
+        
         try {
-            const r = await fetch(SOURCE_URL);
-            const json = await r.json();
+            const response = await fetch(url);
+            if (!response.ok) throw new Error('Network response was not ok');
+            const json = await response.json();
             
-            // 讀取新的 JSON 結構中的 "data" 欄位
+            // 解碼並渲染
             const base64Data = json.data;
-
-            // 支援中文的 Base64 解碼方式
             const html = decodeURIComponent(atob(base64Data).split('').map(function(c) {
                 return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
             }).join(''));
 
-            // 渲染內容
             document.getElementById('login-screen').style.display = "none";
             const main = document.getElementById('content-main');
             main.style.display = "block";
@@ -171,16 +167,20 @@
             window.scrollTo(0, 0);
 
         } catch (e) {
-            msg.innerText = "source.json 載入失敗，請檢查權限";
+            // 如果 fetch 失敗，可能是 CORS 問題，提供一個備用的 iframe 方法
+            msg.innerHTML = "權限限制，正在嘗試備用載入...";
             console.error(e);
+            
+            // 備用方案：如果 JSON 抓不到，嘗試直接跳轉到 preview 模式
+            setTimeout(() => {
+                window.location.href = `https://drive.google.com/file/d/${JSON_FILE_ID}/preview`;
+            }, 1500);
         }
     }
 
     document.getElementById('password').addEventListener("keydown", e => {
         if (e.key === "Enter") unlock();
     });
-
-    document.getElementById('unlockBtn').onclick = unlock;
 
     init();
 </script>

@@ -3,81 +3,131 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Private Bookmark</title>
+    <title>Private Vault</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <style>
-        body { margin: 0; padding: 0; font-family: Arial, sans-serif; background: #fff; overflow-x: hidden; }
+        body { margin: 0; padding: 0; font-family: 'Lato', sans-serif; background: #fff; overflow-x: hidden; }
+        
+        /* 紫色背景區塊 */
         .header {
-            position: relative; text-align: center;
-            background: linear-gradient(60deg, #543ab7, #00acc1);
-            color: white; height: 100vh; display: flex; flex-direction: column;
+            position: relative;
+            text-align: center;
+            background: linear-gradient(60deg, rgba(84,58,183,1) 0%, rgba(0,172,193,1) 100%);
+            color: white;
+            height: 50vh; /* 調為 50%，與白底對分 */
+            display: flex;
+            flex-direction: column;
         }
-        .inner-header { flex: 1; display: flex; justify-content: center; align-items: center; flex-direction: column; z-index: 10; }
+
+        .inner-header {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            z-index: 10;
+        }
+
         h1 { font-weight: 300; letter-spacing: 2px; font-size: 36px; margin-bottom: 20px; }
         input { padding: 12px 20px; border-radius: 25px; border: none; width: 220px; text-align: center; font-size: 16px; outline: none; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
         button { padding: 10px 35px; margin-top: 20px; border-radius: 25px; border: 2px solid white; background: transparent; color: white; font-weight: bold; cursor: pointer; transition: 0.3s; }
         button:hover { background: white; color: #00acc1; }
-        #msg { margin-top: 15px; font-size: 14px; color: #ffdede; min-height: 1.2em; font-weight: bold; }
+        #msg { margin-top: 15px; font-size: 14px; color: #ffdede; min-height: 1.2em; }
 
-        /* 經典 6 層波浪視覺效果 */
-        .waves { position: relative; width: 100%; height: 15vh; min-height: 80px; max-height: 150px; margin-top: -15vh; }
-        .parallax > use { animation: move-forever 25s cubic-bezier(.55,.5,.45,.5) infinite; }
+        /* 6 層波浪設定 */
+        .waves {
+            position: relative;
+            width: 100%;
+            height: 15vh;
+            margin-bottom: -7px; /* 修正縫隙 */
+            min-height: 100px;
+            max-height: 150px;
+        }
+
+        .parallax > use {
+            animation: move-forever 25s cubic-bezier(.55,.5,.45,.5) infinite;
+        }
+        /* 6 層波浪：不同的速度與延遲 */
         .parallax > use:nth-child(1) { animation-delay: -2s; animation-duration: 7s; }
-        .parallax > use:nth-child(2) { animation-delay: -3s; animation-duration: 10s; }
-        .parallax > use:nth-child(3) { animation-delay: -4s; animation-duration: 13s; }
+        .parallax > use:nth-child(2) { animation-delay: -3s; animation-duration: 11s; }
+        .parallax > use:nth-child(3) { animation-delay: -4s; animation-duration: 15s; }
         .parallax > use:nth-child(4) { animation-delay: -5s; animation-duration: 20s; }
-        .parallax > use:nth-child(5) { animation-delay: -6s; animation-duration: 15s; }
-        .parallax > use:nth-child(6) { animation-delay: -7s; animation-duration: 25s; }
-        @keyframes move-forever { 0% { transform: translate3d(-90px,0,0); } 100% { transform: translate3d(85px,0,0); } }
+        .parallax > use:nth-child(5) { animation-delay: -6s; animation-duration: 25s; }
+        .parallax > use:nth-child(6) { animation-delay: -7s; animation-duration: 30s; }
 
-        /* 主內容區域（預設隱藏） */
+        @keyframes move-forever {
+            0% { transform: translate3d(-90px,0,0); }
+            100% { transform: translate3d(85px,0,0); }
+        }
+
+        /* 下方白區塊內容 */
+        .content {
+            height: 35vh; /* 確保白底有足夠高度 */
+            text-align: center;
+            background-color: white;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding-top: 20px;
+        }
+
         #content-main { display: none; width: 100%; min-height: 100vh; background: #fff; position: absolute; top: 0; left: 0; z-index: 999; }
+
+        @media (max-width: 768px) {
+            .waves { height: 40px; min-height: 40px; }
+            h1 { font-size: 24px; }
+            .header { height: 45vh; }
+        }
     </style>
 </head>
 <body>
 
-<div id="login-ui" class="header">
-    <div class="inner-header">
-        <h1>Private Vault</h1>
-        <input type="password" id="password" placeholder="ENTER PASSWORD">
-        <br>
-        <button onclick="unlock()">UNLOCK</button>
-        <p id="msg"></p>
+<div id="login-ui">
+    <div class="header">
+        <div class="inner-header">
+            <h1>Private Vault</h1>
+            <input type="password" id="password" placeholder="ENTER PASSWORD">
+            <button onclick="unlock()">UNLOCK</button>
+            <p id="msg"></p>
+        </div>
+
+        <svg class="waves" xmlns="http://www.w3.org/2000/svg" viewBox="0 24 150 28" preserveAspectRatio="none" shape-rendering="auto">
+            <defs>
+                <path id="gentle-wave" d="M-160 44c30 0 58-18 88-18s 58 18 88 18 58-18 88-18 58 18 88 18 v44h-352z" />
+            </defs>
+            <g class="parallax">
+                <use href="#gentle-wave" x="48" y="0" fill="rgba(255,255,255,0.2)" />
+                <use href="#gentle-wave" x="48" y="2" fill="rgba(255,255,255,0.4)" />
+                <use href="#gentle-wave" x="48" y="4" fill="rgba(255,255,255,0.5)" />
+                <use href="#gentle-wave" x="48" y="6" fill="rgba(255,255,255,0.7)" />
+                <use href="#gentle-wave" x="48" y="8" fill="rgba(255,255,255,0.8)" />
+                <use href="#gentle-wave" x="48" y="10" fill="#ffffff" />
+            </g>
+        </svg>
     </div>
 
-    <svg class="waves" xmlns="http://www.w3.org/2000/svg" viewBox="0 24 150 28" preserveAspectRatio="none" shape-rendering="auto">
-        <defs><path id="gentle-wave" d="M-160 44c30 0 58-18 88-18s58 18 88 18 58-18 88-18 58 18 88 18 v44h-352z"/></defs>
-        <g class="parallax">
-            <use href="#gentle-wave" x="48" y="0" fill="rgba(255,255,255,0.7)"/>
-            <use href="#gentle-wave" x="48" y="3" fill="rgba(255,255,255,0.5)"/>
-            <use href="#gentle-wave" x="48" y="5" fill="rgba(255,255,255,0.3)"/>
-            <use href="#gentle-wave" x="48" y="7" fill="rgba(255,255,255,0.2)"/>
-            <use href="#gentle-wave" x="48" y="9" fill="rgba(255,255,255,0.1)"/>
-            <use href="#gentle-wave" x="48" y="12" fill="#fff"/>
-        </g>
-    </svg>
+    <div class="content">
+        <p style="color: #999; font-size: 12px;">Securely Powered by GitHub API | 2026</p>
+    </div>
 </div>
 
 <div id="content-main"></div>
 
 <script>
-const CFG = {
-    user: "pipi-family",
-    repo: "my-private-data",
-    _k: "'Z2hwX1NpNk1MR3dCQXdCbWtFVWFrZlhxNmhQMDBTSFVXdzBKOXR2dg=='" // 確保符號都在裡面
-};
+    const CFG = {
+        user: "pipi-family",
+        repo: "my-private-data",
+        // 請將新產生 Token 做 btoa() 轉換後貼在這裡
+        _k: "'Z2hwX3g4WEJEYTlyN3dFZ2VhQU52M1Noc1hzZUExQzF3WTRZSmdrYQ=='" 
+    };
 
-    // GitHub API 抓取函式
     async function fetchFromVault(file) {
         const url = `https://api.github.com/repos/${CFG.user}/${CFG.repo}/contents/${file}`;
         const res = await fetch(url, {
-            headers: { "Authorization": `token ${CFG.token}` }
+            headers: { "Authorization": `token ${atob(CFG._k)}` }
         });
-        
-        if (!res.ok) throw new Error("API 存取失敗");
-        
+        if (!res.ok) throw new Error("Vault Access Denied");
         const data = await res.json();
-        // GitHub API 回傳為 Base64 編碼，需還原並處理特殊字元
         const base64Content = data.content.replace(/\s/g, '');
         return decodeURIComponent(atob(base64Content).split('').map(c => 
             '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)
@@ -88,37 +138,24 @@ const CFG = {
         const msg = document.getElementById('msg');
         const pwd = document.getElementById('password').value;
         const hash = CryptoJS.SHA256(pwd).toString();
-        
-        msg.innerText = "Connecting to Secure Vault...";
+        msg.innerText = "Connecting...";
 
         try {
-            // 1. 抓取私密庫中的 pass.json
             const passStr = await fetchFromVault("pass.json");
             const storedHash = JSON.parse(passStr).hash;
-
-            // 2. 比對 Hash
             if (hash === storedHash) {
-                msg.innerText = "Password Verified. Loading Content...";
-                
-                // 3. 抓取私密庫中的 source.html
                 const html = await fetchFromVault("source.html");
-                
-                // 4. 渲染頁面
                 document.getElementById('login-ui').style.display = "none";
                 const main = document.getElementById('content-main');
                 main.style.display = "block";
                 main.innerHTML = html;
-                window.scrollTo(0, 0);
             } else {
-                msg.innerText = "Password Denied.";
+                msg.innerText = "Access Denied.";
             }
         } catch (e) {
-            msg.innerText = "Error: Please check Token or Network.";
-            console.error(e);
+            msg.innerText = "Error: Token Revoked or Network Issue.";
         }
     }
-
-    // 支援 Enter 鍵解鎖
     document.getElementById('password').addEventListener("keydown", e => { if (e.key === "Enter") unlock(); });
 </script>
 </body>

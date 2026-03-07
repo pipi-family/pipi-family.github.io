@@ -12,50 +12,62 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 
-    <style>
-        @import url(//fonts.googleapis.com/css?family=Lato:300:400);
-        body { margin: 0; font-family: 'Lato', sans-serif; background: #EBEBEB; overflow-x: hidden; }
-        
-        .header {
-            position: relative;
-            text-align: center;
-            background: linear-gradient(60deg, #543ab7 0%, #00acc1 100%);
-            color: white;
-        }
-        .inner-header {
-            height: 60vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            flex-direction: column;
-        }
+<style>
+    /* 修正 body 與 header 讓背景全螢幕 */
+    body { margin: 0; font-family: 'Lato', sans-serif; background: #fff; overflow-x: hidden; }
+    
+    .header {
+        position: relative;
+        text-align: center;
+        background: linear-gradient(60deg, #543ab7 0%, #00acc1 100%);
+        color: white;
+        /* 改為 100vh 確保波浪從最底部開始 */
+        height: 100vh;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+    }
 
-        .login-box { z-index: 10; margin-top: 20px; }
-        input {
-            padding: 12px; border-radius: 25px; border: none;
-            width: 220px; text-align: center; font-size: 16px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2); outline: none;
-        }
-        button {
-            padding: 10px 30px; margin-top: 15px; border-radius: 25px;
-            border: 2px solid white; background: transparent; color: white;
-            cursor: pointer; font-weight: bold; transition: 0.3s;
-        }
-        button:hover { background: white; color: #00acc1; }
-        #msg { font-size: 13px; margin-top: 10px; color: #ffdede; min-height: 1.2em; }
+    .inner-header {
+        flex: 1; /* 自動填滿上方空間 */
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-direction: column;
+    }
 
-        /* 波浪動畫 */
-        .waves { position: relative; width: 100%; height: 15vh; margin-bottom: -7px; min-height: 100px; max-height: 150px; }
-        .parallax > use { animation: move-forever 25s cubic-bezier(.55,.5,.45,.5) infinite; }
-        .parallax > use:nth-child(1) { animation-delay: -2s; animation-duration: 7s; }
-        .parallax > use:nth-child(2) { animation-delay: -3s; animation-duration: 10s; }
-        .parallax > use:nth-child(3) { animation-delay: -4s; animation-duration: 13s; }
-        .parallax > use:nth-child(4) { animation-delay: -5s; animation-duration: 20s; }
-        @keyframes move-forever { 0% { transform: translate3d(-90px,0,0); } 100% { transform: translate3d(85px,0,0); } }
+    /* 波浪樣式修正 */
+    .waves {
+        position: relative;
+        width: 100%;
+        height: 15vh;
+        margin-bottom: -1px; /* 消除與底部的細微縫隙 */
+        min-height: 100px;
+        max-height: 150px;
+    }
 
-        /* 內容顯示區 */
-        #content-area { display: none; width: 100%; background: #fff; min-height: 100vh; }
-    </style>
+    /* 6層波浪動畫設定 */
+    .parallax > use { animation: move-forever 25s cubic-bezier(.55,.5,.45,.5) infinite; }
+    
+    .parallax > use:nth-child(1) { animation-delay: -2s; animation-duration: 7s; }
+    .parallax > use:nth-child(2) { animation-delay: -3s; animation-duration: 10s; }
+    .parallax > use:nth-child(3) { animation-delay: -4s; animation-duration: 13s; }
+    .parallax > use:nth-child(4) { animation-delay: -5s; animation-duration: 20s; }
+    .parallax > use:nth-child(5) { animation-delay: -6s; animation-duration: 15s; } /* 新增層5 */
+    .parallax > use:nth-child(6) { animation-delay: -7s; animation-duration: 25s; } /* 新增層6 */
+
+    @keyframes move-forever {
+        0% { transform: translate3d(-90px,0,0); }
+        100% { transform: translate3d(85px,0,0); }
+    }
+
+    /* 登入介面微調 */
+    .login-box { z-index: 10; }
+    #content-area { display: none; width: 100%; min-height: 100vh; }
+</style>
+
 </head>
 
 <body>
@@ -74,14 +86,15 @@
     <svg class="waves" xmlns="http://www.w3.org/2000/svg" viewBox="0 24 150 28" preserveAspectRatio="none">
         <defs><path id="wave" d="M-160 44c30 0 58-18 88-18s58 18 88 18 58-18 88-18 58 18 88 18v44h-352z"/></defs>
         <g class="parallax">
-            <use href="#wave" x="48" y="0" fill="rgba(255,255,255,0.7)"/>
-            <use href="#wave" x="48" y="3" fill="rgba(255,255,255,0.5)"/>
-            <use href="#wave" x="48" y="5" fill="rgba(255,255,255,0.3)"/>
-            <use href="#wave" x="48" y="7" fill="#fff"/>
+            <use href="#wave" x="48" y="0" fill="rgba(255,255,255,0.6)"/>
+            <use href="#wave" x="48" y="2" fill="rgba(255,255,255,0.4)"/>
+            <use href="#wave" x="48" y="4" fill="rgba(255,255,255,0.2)"/>
+            <use href="#wave" x="48" y="6" fill="rgba(255,255,255,0.4)"/>
+            <use href="#wave" x="48" y="8" fill="rgba(255,255,255,0.3)"/>
+            <use href="#wave" x="48" y="10" fill="#fff"/>
         </g>
     </svg>
 </div>
-
 <div id="content-area"></div>
 
 <script>

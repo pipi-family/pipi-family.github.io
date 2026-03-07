@@ -6,15 +6,14 @@
     <title>Private Vault</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <style>
-        body { margin: 0; padding: 0; font-family: 'Lato', sans-serif; background: #fff; overflow-x: hidden; }
+        body { margin: 0; padding: 0; font-family: 'Lato', sans-serif; background: #fff; overflow-x: hidden; height: 100vh; }
         
-        /* 紫色背景區塊 */
         .header {
             position: relative;
             text-align: center;
             background: linear-gradient(60deg, rgba(84,58,183,1) 0%, rgba(0,172,193,1) 100%);
             color: white;
-            height: 50vh; /* 調為 50%，與白底對分 */
+            height: 65vh; 
             display: flex;
             flex-direction: column;
         }
@@ -34,12 +33,11 @@
         button:hover { background: white; color: #00acc1; }
         #msg { margin-top: 15px; font-size: 14px; color: #ffdede; min-height: 1.2em; }
 
-        /* 6 層波浪設定 */
         .waves {
             position: relative;
             width: 100%;
             height: 15vh;
-            margin-bottom: -7px; /* 修正縫隙 */
+            margin-bottom: -7px;
             min-height: 100px;
             max-height: 150px;
         }
@@ -47,7 +45,6 @@
         .parallax > use {
             animation: move-forever 25s cubic-bezier(.55,.5,.45,.5) infinite;
         }
-        /* 6 層波浪：不同的速度與延遲 */
         .parallax > use:nth-child(1) { animation-delay: -2s; animation-duration: 7s; }
         .parallax > use:nth-child(2) { animation-delay: -3s; animation-duration: 11s; }
         .parallax > use:nth-child(3) { animation-delay: -4s; animation-duration: 15s; }
@@ -60,15 +57,16 @@
             100% { transform: translate3d(85px,0,0); }
         }
 
-        /* 下方白區塊內容 */
-        .content {
-            height: 35vh; /* 確保白底有足夠高度 */
-            text-align: center;
-            background-color: white;
-            display: flex;
-            justify-content: center;
-            align-items: flex-start;
-            padding-top: 20px;
+        /* 右下角動態標記 */
+        #footer-tag {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            color: #00acc1;
+            font-size: 12px;
+            z-index: 5;
+            letter-spacing: 1px;
+            font-family: monospace; /* 使用等寬字體讓時間跳動時不抖動 */
         }
 
         #content-main { display: none; width: 100%; min-height: 100vh; background: #fff; position: absolute; top: 0; left: 0; z-index: 999; }
@@ -76,7 +74,7 @@
         @media (max-width: 768px) {
             .waves { height: 40px; min-height: 40px; }
             h1 { font-size: 24px; }
-            .header { height: 45vh; }
+            .header { height: 60vh; }
         }
     </style>
 </head>
@@ -106,21 +104,35 @@
         </svg>
     </div>
 
-    <div class="content">
-        <p style="color: #999; font-size: 12px;">Securely Powered by GitHub API | 2026</p>
-    </div>
+    <div id="footer-tag"></div>
 </div>
 
 <div id="content-main"></div>
 
 <script>
+    // --- 動態時間功能 ---
+    function updateTime() {
+        const now = new Date();
+        const y = now.getFullYear();
+        const m = String(now.getMonth() + 1).padStart(2, '0');
+        const d = String(now.getDate()).padStart(2, '0');
+        const hh = String(now.getHours()).padStart(2, '0');
+        const mm = String(now.getMinutes()).padStart(2, '0');
+        const ss = String(now.getSeconds()).padStart(2, '0');
+        
+        document.getElementById('footer-tag').innerText = `${y}-${m}-${d} ${hh}:${mm}:${ss} @ GitHub API`;
+    }
+    setInterval(updateTime, 1000);
+    updateTime(); // 初始呼叫
+
     const CFG = {
         user: "pipi-family",
         repo: "my-private-data",
-        // 請將新產生 Token 做 btoa() 轉換後貼在這裡
+        // 記得貼上 Base64 混淆後的 Token
         _k: "'Z2hwX3g4WEJEYTlyN3dFZ2VhQU52M1Noc1hzZUExQzF3WTRZSmdrYQ=='" 
     };
 
+    // ... fetchFromVault 與 unlock 函式維持不變 ...
     async function fetchFromVault(file) {
         const url = `https://api.github.com/repos/${CFG.user}/${CFG.repo}/contents/${file}`;
         const res = await fetch(url, {

@@ -2,33 +2,19 @@
 <html lang="zh-Hant">
 <head>
     <meta charset="UTF-8">
-    <meta name="robots" content="noindex,nofollow">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Private Bookmark</title>
-
-    <link rel="shortcut icon" href="/favicon/favicon.ico">
-    <link rel="icon" type="image/gif" href="/favicon/animated_favicon1.gif">
-    <link rel="icon" href="/favicon/favicon.ico" type="image/x-icon">
-
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
-
     <style>
-        /* 移除預設邊距，解決右側 Scrollbar 問題 */
-        html, body { 
-            margin: 0; 
-            padding: 0; 
-            width: 100%;
-            height: 100%;
-            overflow-x: hidden; 
-            background-color: #ffffff; /* 確保底色是純白 */
-        }
+        /* 1. 移除邊距，解決右側 Bar 問題 */
+        body { margin: 0; padding: 0; font-family: Arial; background: #fff; overflow-x: hidden; }
 
         .header {
             position: relative;
             text-align: center;
-            background: linear-gradient(60deg, #543ab7 0%, #00acc1 100%);
+            background: linear-gradient(60deg, #543ab7, #00acc1);
             color: white;
-            min-height: 60vh; /* 回復到較舒適的高度 */
+            height: 100vh;
             display: flex;
             flex-direction: column;
         }
@@ -39,6 +25,7 @@
             justify-content: center;
             align-items: center;
             flex-direction: column;
+            padding-bottom: 5vh; /* 讓標題與輸入框稍微往上，留出空間給波浪 */
         }
 
         input {
@@ -50,24 +37,24 @@
         button {
             padding: 10px 30px; margin-top: 15px; border-radius: 25px;
             border: 2px solid white; background: transparent;
-            color: white; font-weight: bold; cursor: pointer;
+            color: white; font-weight: bold; cursor: pointer; transition: 0.3s;
         }
+        button:hover { background: white; color: #00acc1; }
 
-        #msg { margin-top: 10px; font-size: 14px; color: #ffdede; min-height: 1.2em; }
+        #msg { margin-top: 10px; font-size: 14px; color: #ffdede; }
 
-        /* 波浪區塊修正 */
+        /* 2. 波浪高度調整：降低波浪佔比，並確保下方無縫對接白底 */
         .waves {
             position: relative;
             width: 100%;
-            height: 15vh;
-            min-height: 100px;
-            max-height: 150px;
-            display: block; /* 移除 inline 導致的微小間隙 */
-            margin-bottom: -1px; /* 向下壓 1px 確保與白底融合 */
+            height: 10vh; /* 降低波浪整體視覺高度 */
+            min-height: 80px;
+            max-height: 120px;
+            margin-bottom: -1px; /* 消除與底部的細微縫隙 */
+            display: block;
         }
 
-        /* 6層波浪動畫設定 */
-        .parallax > use { animation: move-forever 25s cubic-bezier(.55,.5,.45,.5) infinite; }
+        .parallax > use { animation: move 25s cubic-bezier(.55,.5,.45,.5) infinite; }
         .parallax > use:nth-child(1) { animation-delay: -2s; animation-duration: 7s; }
         .parallax > use:nth-child(2) { animation-delay: -3s; animation-duration: 10s; }
         .parallax > use:nth-child(3) { animation-delay: -4s; animation-duration: 13s; }
@@ -75,40 +62,35 @@
         .parallax > use:nth-child(5) { animation-delay: -6s; animation-duration: 15s; }
         .parallax > use:nth-child(6) { animation-delay: -7s; animation-duration: 25s; }
 
-        @keyframes move-forever {
+        @keyframes move {
             0% { transform: translate3d(-90px,0,0); }
             100% { transform: translate3d(85px,0,0); }
         }
 
-        /* 內容顯示區 */
-        #content-main { 
-            display: none; 
-            width: 100%; 
-            background: #ffffff; 
-        }
+        #content-main { display: none; width: 100%; min-height: 100vh; background: #fff; }
     </style>
 </head>
 
 <body>
 
-<div id="login-ui" class="header">
+<div id="login-screen" class="header">
     <div class="inner-header">
         <h1>Private Bookmark</h1>
-        <input type="password" id="password" placeholder="Connecting..." disabled>
+        <input type="password" id="password" placeholder="輸入密碼">
         <br>
-        <button id="unlockBtn" disabled onclick="unlock()">CONNECTING</button>
+        <button id="unlockBtn" onclick="unlock()">UNLOCK</button>
         <p id="msg"></p>
     </div>
 
-    <svg class="waves" xmlns="http://www.w3.org/2000/svg" viewBox="0 24 150 28" preserveAspectRatio="none" shape-rendering="auto">
-        <defs><path id="wave" d="M-160 44c30 0 58-18 88-18s58 18 88 18 58-18 88-18 58 18 88 18v44h-352z"/></defs>
+    <svg class="waves" xmlns="http://www.w3.org/2000/svg" viewBox="0 24 150 28" preserveAspectRatio="none">
+        <defs><path id="wave" d="M-160 44c30 0 58-18 88-18s58 18 88 18 58-18 88-18 58 18 88 18 v44h-352z"/></defs>
         <g class="parallax">
-            <use href="#wave" x="48" y="0" fill="rgba(255,255,255,0.7)"/>
-            <use href="#wave" x="48" y="2" fill="rgba(255,255,255,0.5)"/>
+            <use href="#wave" x="48" y="0" fill="rgba(255,255,255,0.6)"/>
+            <use href="#wave" x="48" y="1" fill="rgba(255,255,255,0.4)"/>
+            <use href="#wave" x="48" y="2" fill="rgba(255,255,255,0.2)"/>
+            <use href="#wave" x="48" y="3" fill="rgba(255,255,255,0.4)"/>
             <use href="#wave" x="48" y="4" fill="rgba(255,255,255,0.3)"/>
-            <use href="#wave" x="48" y="6" fill="rgba(255,255,255,0.4)"/>
-            <use href="#wave" x="48" y="8" fill="rgba(255,255,255,0.2)"/>
-            <use href="#wave" x="48" y="10" fill="#ffffff"/> </g>
+            <use href="#wave" x="48" y="5" fill="#fff"/> </g>
     </svg>
 </div>
 
@@ -125,10 +107,6 @@
             let r = await fetch(PASS_URL);
             let data = await r.json();
             HASH = data.hash;
-            document.getElementById('password').disabled = false;
-            document.getElementById('password').placeholder = "輸入密碼";
-            document.getElementById('unlockBtn').disabled = false;
-            document.getElementById('unlockBtn').innerText = "UNLOCK";
         } catch (e) {
             document.getElementById('msg').innerText = "pass.json 讀取失敗";
         }
@@ -136,8 +114,8 @@
 
     function unlock() {
         if (attempt >= 5) return;
-        const pw = document.getElementById('password').value;
-        if (CryptoJS.SHA256(pw).toString() === HASH) {
+        const input = document.getElementById('password').value;
+        if (CryptoJS.SHA256(input).toString() === HASH) {
             loadSource();
         } else {
             attempt++;
@@ -146,28 +124,26 @@
     }
 
     async function loadSource() {
-        document.getElementById('msg').innerText = "Loading...";
+        document.getElementById('msg').innerText = "Synchronizing...";
         try {
             const r = await fetch(`https://docs.google.com/uc?export=download&id=${JSON_FILE_ID}`);
             const json = await r.json();
-            
-            // 安全解碼 (支援中文)
             const html = decodeURIComponent(atob(json.data).split('').map(c => 
                 '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)
             ).join(''));
 
-            document.getElementById('login-ui').style.display = "none";
+            document.getElementById('login-screen').style.display = "none";
             const main = document.getElementById('content-main');
             main.style.display = "block";
             main.innerHTML = html;
-            window.scrollTo(0,0);
         } catch (e) {
-            document.getElementById('msg').innerText = "載入失敗，請檢查權限";
+            document.getElementById('msg').innerText = "載入失敗";
         }
     }
 
     document.getElementById('password').addEventListener("keydown", e => { if (e.key === "Enter") unlock(); });
     init();
 </script>
+
 </body>
 </html>

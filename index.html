@@ -6,78 +6,31 @@
     <title>Private Vault</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <style>
+        /* 樣式開始 */
         body { margin: 0; padding: 0; font-family: 'Lato', sans-serif; background: #fff; overflow-x: hidden; height: 100vh; }
-        
         .header {
-            position: relative;
-            text-align: center;
+            position: relative; text-align: center;
             background: linear-gradient(60deg, rgba(84,58,183,1) 0%, rgba(0,172,193,1) 100%);
-            color: white;
-            /* 調整為 80vh，讓波浪下壓到頁面底部三分之一處 */
-            height: 80vh; 
-            display: flex;
-            flex-direction: column;
+            color: white; height: 80vh; /* 高度調高，讓波浪下壓 */
+            display: flex; flex-direction: column;
         }
-
-        .inner-header {
-            flex: 1;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            flex-direction: column;
-            z-index: 10;
-        }
-
+        .inner-header { flex: 1; display: flex; justify-content: center; align-items: center; flex-direction: column; z-index: 10; }
         h1 { font-weight: 300; letter-spacing: 2px; font-size: 36px; margin-bottom: 20px; }
         input { padding: 12px 20px; border-radius: 25px; border: none; width: 220px; text-align: center; font-size: 16px; outline: none; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
         button { padding: 10px 35px; margin-top: 20px; border-radius: 25px; border: 2px solid white; background: transparent; color: white; font-weight: bold; cursor: pointer; transition: 0.3s; }
         button:hover { background: white; color: #00acc1; }
-        #msg { margin-top: 15px; font-size: 14px; color: #ffdede; min-height: 1.2em; }
-
-        /* 波浪容器高度稍微縮減，增加精緻感 */
-        .waves {
-            position: relative;
-            width: 100%;
-            height: 10vh; 
-            margin-bottom: -7px;
-            min-height: 60px;
-            max-height: 100px;
-        }
-
-        .parallax > use {
-            animation: move-forever 25s cubic-bezier(.55,.5,.45,.5) infinite;
-        }
+        #msg { margin-top: 15px; font-size: 14px; color: #ffdede; min-height: 1.2em; font-weight: bold;}
+        .waves { position: relative; width: 100%; height: 10vh; margin-bottom: -7px; min-height: 60px; max-height: 100px; }
+        .parallax > use { animation: move-forever 25s cubic-bezier(.55,.5,.45,.5) infinite; }
         .parallax > use:nth-child(1) { animation-delay: -2s; animation-duration: 7s; }
         .parallax > use:nth-child(2) { animation-delay: -3s; animation-duration: 11s; }
         .parallax > use:nth-child(3) { animation-delay: -4s; animation-duration: 15s; }
         .parallax > use:nth-child(4) { animation-delay: -5s; animation-duration: 20s; }
         .parallax > use:nth-child(5) { animation-delay: -6s; animation-duration: 25s; }
         .parallax > use:nth-child(6) { animation-delay: -7s; animation-duration: 30s; }
-
-        @keyframes move-forever {
-            0% { transform: translate3d(-90px,0,0); }
-            100% { transform: translate3d(85px,0,0); }
-        }
-
-        /* 右下角動態標記：水藍色 */
-        #footer-tag {
-            position: fixed;
-            bottom: 15px;
-            right: 20px;
-            color: #00acc1;
-            font-size: 11px;
-            z-index: 5;
-            letter-spacing: 1px;
-            font-family: 'Courier New', monospace;
-        }
-
+        @keyframes move-forever { 0% { transform: translate3d(-90px,0,0); } 100% { transform: translate3d(85px,0,0); } }
+        #footer-tag { position: fixed; bottom: 15px; right: 20px; color: #00acc1; font-size: 11px; z-index: 5; font-family: monospace; }
         #content-main { display: none; width: 100%; min-height: 100vh; background: #fff; position: absolute; top: 0; left: 0; z-index: 999; }
-
-        @media (max-width: 768px) {
-            .waves { height: 40px; min-height: 40px; }
-            h1 { font-size: 24px; }
-            .header { height: 75vh; }
-        }
     </style>
 </head>
 <body>
@@ -90,18 +43,10 @@
             <button onclick="unlock()">UNLOCK</button>
             <p id="msg"></p>
         </div>
-
         <svg class="waves" xmlns="http://www.w3.org/2000/svg" viewBox="0 24 150 28" preserveAspectRatio="none" shape-rendering="auto">
-            <defs>
-                <path id="gentle-wave" d="M-160 44c30 0 58-18 88-18s 58 18 88 18 58-18 88-18 58 18 88 18 v44h-352z" />
-            </defs>
+            <defs><path id="gentle-wave" d="M-160 44c30 0 58-18 88-18s 58 18 88 18 58-18 88-18 58 18 88 18 v44h-352z" /></defs>
             <g class="parallax">
-                <use href="#gentle-wave" x="48" y="0" fill="rgba(255,255,255,0.2)" />
-                <use href="#gentle-wave" x="48" y="2" fill="rgba(255,255,255,0.4)" />
-                <use href="#gentle-wave" x="48" y="4" fill="rgba(255,255,255,0.5)" />
-                <use href="#gentle-wave" x="48" y="6" fill="rgba(255,255,255,0.7)" />
-                <use href="#gentle-wave" x="48" y="8" fill="rgba(255,255,255,0.8)" />
-                <use href="#gentle-wave" x="48" y="10" fill="#ffffff" />
+                <use href="#gentle-wave" x="48" y="0" fill="rgba(255,255,255,0.2)" /><use href="#gentle-wave" x="48" y="2" fill="rgba(255,255,255,0.4)" /><use href="#gentle-wave" x="48" y="4" fill="rgba(255,255,255,0.5)" /><use href="#gentle-wave" x="48" y="6" fill="rgba(255,255,255,0.7)" /><use href="#gentle-wave" x="48" y="8" fill="rgba(255,255,255,0.8)" /><use href="#gentle-wave" x="48" y="10" fill="#ffffff" />
             </g>
         </svg>
     </div>
@@ -111,38 +56,28 @@
 <div id="content-main"></div>
 
 <script>
-    // 動態更新右下角時間
+    // 更新右下角時間
     function updateTime() {
         const now = new Date();
-        const y = now.getFullYear();
-        const m = String(now.getMonth() + 1).padStart(2, '0');
-        const d = String(now.getDate()).padStart(2, '0');
-        const hh = String(now.getHours()).padStart(2, '0');
-        const mm = String(now.getMinutes()).padStart(2, '0');
-        const ss = String(now.getSeconds()).padStart(2, '0');
+        const y = now.getFullYear(), m = String(now.getMonth() + 1).padStart(2, '0'), d = String(now.getDate()).padStart(2, '0');
+        const hh = String(now.getHours()).padStart(2, '0'), mm = String(now.getMinutes()).padStart(2, '0'), ss = String(now.getSeconds()).padStart(2, '0');
         document.getElementById('footer-tag').innerText = `${y}-${m}-${d} ${hh}:${mm}:${ss} @ GitHub API`;
     }
-    setInterval(updateTime, 1000);
-    updateTime();
+    setInterval(updateTime, 1000); updateTime();
 
     const CFG = {
         user: "pipi-family",
         repo: "my-private-data",
-        // 務必填入 btoa() 轉換後的 Token
-        _k: "Z2hwX3g4WEJEYTlyN3dFZ2VhQU52M1Noc1hzZUExQzF3WTRZSmdrYQ==" 
+        _k: "Z2hwX3g4WEJEYTlyN3dFZ2VhQU52M1Noc1hzZUExQzF3WTRZSmdrYQ==" // 確保只有一層引號
     };
 
     async function fetchFromVault(file) {
         const url = `https://api.github.com/repos/${CFG.user}/${CFG.repo}/contents/${file}`;
-        const res = await fetch(url, {
-            headers: { "Authorization": `token ${atob(CFG._k)}` }
-        });
+        const res = await fetch(url, { headers: { "Authorization": `token ${atob(CFG._k)}` } });
         if (!res.ok) throw new Error("Vault Access Denied");
         const data = await res.json();
         const base64Content = data.content.replace(/\s/g, '');
-        return decodeURIComponent(atob(base64Content).split('').map(c => 
-            '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)
-        ).join(''));
+        return decodeURIComponent(atob(base64Content).split('').map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join(''));
     }
 
     async function unlock() {
@@ -150,7 +85,6 @@
         const pwd = document.getElementById('password').value;
         const hash = CryptoJS.SHA256(pwd).toString();
         msg.innerText = "Connecting...";
-
         try {
             const passStr = await fetchFromVault("pass.json");
             const storedHash = JSON.parse(passStr).hash;
@@ -160,149 +94,8 @@
                 const main = document.getElementById('content-main');
                 main.style.display = "block";
                 main.innerHTML = html;
-            } else {
-                msg.innerText = "Access Denied.";
-            }
-        } catch (e) {
-            msg.innerText = "Error: Token Revoked or Network Issue.";
-        }
-    }
-    document.getElementById('password').addEventListener("keydown", e => { if (e.key === "Enter") unlock(); });
-</script>
-</body>
-</html>            position: relative;
-            width: 100%;
-            height: 15vh;
-            margin-bottom: -7px;
-            min-height: 100px;
-            max-height: 150px;
-        }
-
-        .parallax > use {
-            animation: move-forever 25s cubic-bezier(.55,.5,.45,.5) infinite;
-        }
-        .parallax > use:nth-child(1) { animation-delay: -2s; animation-duration: 7s; }
-        .parallax > use:nth-child(2) { animation-delay: -3s; animation-duration: 11s; }
-        .parallax > use:nth-child(3) { animation-delay: -4s; animation-duration: 15s; }
-        .parallax > use:nth-child(4) { animation-delay: -5s; animation-duration: 20s; }
-        .parallax > use:nth-child(5) { animation-delay: -6s; animation-duration: 25s; }
-        .parallax > use:nth-child(6) { animation-delay: -7s; animation-duration: 30s; }
-
-        @keyframes move-forever {
-            0% { transform: translate3d(-90px,0,0); }
-            100% { transform: translate3d(85px,0,0); }
-        }
-
-        /* 右下角動態標記 */
-        #footer-tag {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            color: #00acc1;
-            font-size: 12px;
-            z-index: 5;
-            letter-spacing: 1px;
-            font-family: monospace; /* 使用等寬字體讓時間跳動時不抖動 */
-        }
-
-        #content-main { display: none; width: 100%; min-height: 100vh; background: #fff; position: absolute; top: 0; left: 0; z-index: 999; }
-
-        @media (max-width: 768px) {
-            .waves { height: 40px; min-height: 40px; }
-            h1 { font-size: 24px; }
-            .header { height: 60vh; }
-        }
-    </style>
-</head>
-<body>
-
-<div id="login-ui">
-    <div class="header">
-        <div class="inner-header">
-            <h1>Private Vault</h1>
-            <input type="password" id="password" placeholder="ENTER PASSWORD">
-            <button onclick="unlock()">UNLOCK</button>
-            <p id="msg"></p>
-        </div>
-
-        <svg class="waves" xmlns="http://www.w3.org/2000/svg" viewBox="0 24 150 28" preserveAspectRatio="none" shape-rendering="auto">
-            <defs>
-                <path id="gentle-wave" d="M-160 44c30 0 58-18 88-18s 58 18 88 18 58-18 88-18 58 18 88 18 v44h-352z" />
-            </defs>
-            <g class="parallax">
-                <use href="#gentle-wave" x="48" y="0" fill="rgba(255,255,255,0.2)" />
-                <use href="#gentle-wave" x="48" y="2" fill="rgba(255,255,255,0.4)" />
-                <use href="#gentle-wave" x="48" y="4" fill="rgba(255,255,255,0.5)" />
-                <use href="#gentle-wave" x="48" y="6" fill="rgba(255,255,255,0.7)" />
-                <use href="#gentle-wave" x="48" y="8" fill="rgba(255,255,255,0.8)" />
-                <use href="#gentle-wave" x="48" y="10" fill="#ffffff" />
-            </g>
-        </svg>
-    </div>
-
-    <div id="footer-tag"></div>
-</div>
-
-<div id="content-main"></div>
-
-<script>
-    // --- 動態時間功能 ---
-    function updateTime() {
-        const now = new Date();
-        const y = now.getFullYear();
-        const m = String(now.getMonth() + 1).padStart(2, '0');
-        const d = String(now.getDate()).padStart(2, '0');
-        const hh = String(now.getHours()).padStart(2, '0');
-        const mm = String(now.getMinutes()).padStart(2, '0');
-        const ss = String(now.getSeconds()).padStart(2, '0');
-        
-        document.getElementById('footer-tag').innerText = `${y}-${m}-${d} ${hh}:${mm}:${ss} @ GitHub API`;
-    }
-    setInterval(updateTime, 1000);
-    updateTime(); // 初始呼叫
-
-    const CFG = {
-        user: "pipi-family",
-        repo: "my-private-data",
-        // 記得貼上 Base64 混淆後的 Token
-        _k: "'Z2hwX3g4WEJEYTlyN3dFZ2VhQU52M1Noc1hzZUExQzF3WTRZSmdrYQ=='" 
-    };
-
-    // ... fetchFromVault 與 unlock 函式維持不變 ...
-    async function fetchFromVault(file) {
-        const url = `https://api.github.com/repos/${CFG.user}/${CFG.repo}/contents/${file}`;
-        const res = await fetch(url, {
-            headers: { "Authorization": `token ${atob(CFG._k)}` }
-        });
-        if (!res.ok) throw new Error("Vault Access Denied");
-        const data = await res.json();
-        const base64Content = data.content.replace(/\s/g, '');
-        return decodeURIComponent(atob(base64Content).split('').map(c => 
-            '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)
-        ).join(''));
-    }
-
-    async function unlock() {
-        const msg = document.getElementById('msg');
-        const pwd = document.getElementById('password').value;
-        const hash = CryptoJS.SHA256(pwd).toString();
-        msg.innerText = "Connecting...";
-
-        try {
-            const passStr = await fetchFromVault("pass.json");
-            const storedHash = JSON.parse(passStr).hash;
-            if (hash === storedHash) {
-                const html = await fetchFromVault("source.html");
-                document.getElementById('login-ui').style.display = "none";
-                const main = document.getElementById('content-main');
-                main.style.display = "block";
-                main.innerHTML = html;
-            } else {
-                msg.innerText = "Access Denied.";
-            }
-        } catch (e) {
-            msg.innerText = "Error: Token Revoked or Network Issue.";
-        }
+            } else { msg.innerText = "Access Denied."; }
+        } catch (e) { msg.innerText = "Error: Token Revoked or Network Issue."; }
     }
     document.getElementById('password').addEventListener("keydown", e => { if (e.key === "Enter") unlock(); });
 </script>

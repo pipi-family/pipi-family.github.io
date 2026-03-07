@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="robots" content="noindex,nofollow">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-
     <title>Private Bookmark</title>
 
     <link rel="shortcut icon" href="/favicon/favicon.ico">
@@ -14,14 +13,22 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 
     <style>
-        body { margin: 0; font-family: Arial; background: #fff; overflow-x: hidden; }
+        /* 移除預設邊距，解決右側 Scrollbar 問題 */
+        html, body { 
+            margin: 0; 
+            padding: 0; 
+            width: 100%;
+            height: 100%;
+            overflow-x: hidden; 
+            background-color: #ffffff; /* 確保底色是純白 */
+        }
 
         .header {
             position: relative;
             text-align: center;
-            background: linear-gradient(60deg, #543ab7, #00acc1);
+            background: linear-gradient(60deg, #543ab7 0%, #00acc1 100%);
             color: white;
-            height: 100vh;
+            min-height: 60vh; /* 回復到較舒適的高度 */
             display: flex;
             flex-direction: column;
         }
@@ -48,17 +55,19 @@
 
         #msg { margin-top: 10px; font-size: 14px; color: #ffdede; min-height: 1.2em; }
 
-        /* 波浪高度回升與優化 */
+        /* 波浪區塊修正 */
         .waves {
             position: relative;
             width: 100%;
-            height: 20vh; /* 增加波浪高度 */
-            margin-bottom: -5px;
-            min-height: 150px;
-            max-height: 100px;
+            height: 15vh;
+            min-height: 100px;
+            max-height: 150px;
+            display: block; /* 移除 inline 導致的微小間隙 */
+            margin-bottom: -1px; /* 向下壓 1px 確保與白底融合 */
         }
 
-        .parallax > use { animation: move 25s cubic-bezier(.55,.5,.45,.5) infinite; }
+        /* 6層波浪動畫設定 */
+        .parallax > use { animation: move-forever 25s cubic-bezier(.55,.5,.45,.5) infinite; }
         .parallax > use:nth-child(1) { animation-delay: -2s; animation-duration: 7s; }
         .parallax > use:nth-child(2) { animation-delay: -3s; animation-duration: 10s; }
         .parallax > use:nth-child(3) { animation-delay: -4s; animation-duration: 13s; }
@@ -66,18 +75,23 @@
         .parallax > use:nth-child(5) { animation-delay: -6s; animation-duration: 15s; }
         .parallax > use:nth-child(6) { animation-delay: -7s; animation-duration: 25s; }
 
-        @keyframes move {
+        @keyframes move-forever {
             0% { transform: translate3d(-90px,0,0); }
             100% { transform: translate3d(85px,0,0); }
         }
 
-        #content-main { display: none; width: 100%; min-height: 100vh; }
+        /* 內容顯示區 */
+        #content-main { 
+            display: none; 
+            width: 100%; 
+            background: #ffffff; 
+        }
     </style>
 </head>
 
 <body>
 
-<div id="login-screen" class="header">
+<div id="login-ui" class="header">
     <div class="inner-header">
         <h1>Private Bookmark</h1>
         <input type="password" id="password" placeholder="Connecting..." disabled>
@@ -86,16 +100,15 @@
         <p id="msg"></p>
     </div>
 
-    <svg class="waves" xmlns="http://www.w3.org/2000/svg" viewBox="0 24 150 28" preserveAspectRatio="none">
-        <defs><path id="wave" d="M-160 44c30 0 58-18 88-18s58 18 88 18 58-18 88-18 58 18 88 18 v44h-352z"/></defs>
+    <svg class="waves" xmlns="http://www.w3.org/2000/svg" viewBox="0 24 150 28" preserveAspectRatio="none" shape-rendering="auto">
+        <defs><path id="wave" d="M-160 44c30 0 58-18 88-18s58 18 88 18 58-18 88-18 58 18 88 18v44h-352z"/></defs>
         <g class="parallax">
-            <use href="#wave" x="48" y="0" fill="rgba(255,255,255,0.5)"/>
-            <use href="#wave" x="48" y="2" fill="rgba(255,255,255,0.3)"/>
-            <use href="#wave" x="48" y="4" fill="rgba(255,255,255,0.2)"/>
+            <use href="#wave" x="48" y="0" fill="rgba(255,255,255,0.7)"/>
+            <use href="#wave" x="48" y="2" fill="rgba(255,255,255,0.5)"/>
+            <use href="#wave" x="48" y="4" fill="rgba(255,255,255,0.3)"/>
             <use href="#wave" x="48" y="6" fill="rgba(255,255,255,0.4)"/>
-            <use href="#wave" x="48" y="8" fill="rgba(255,255,255,0.3)"/>
-            <use href="#wave" x="48" y="10" fill="#fff"/>
-        </g>
+            <use href="#wave" x="48" y="8" fill="rgba(255,255,255,0.2)"/>
+            <use href="#wave" x="48" y="10" fill="#ffffff"/> </g>
     </svg>
 </div>
 
@@ -103,9 +116,7 @@
 
 <script>
     const PASS_URL = "pass.json";
-    // 您的 source.json 檔案 ID
     const JSON_FILE_ID = "1GaBrL5ZFgOEXRJvoChS_S0XmiK99UdYj";
-
     let HASH = "";
     let attempt = 0;
 
@@ -114,7 +125,6 @@
             let r = await fetch(PASS_URL);
             let data = await r.json();
             HASH = data.hash;
-
             document.getElementById('password').disabled = false;
             document.getElementById('password').placeholder = "輸入密碼";
             document.getElementById('unlockBtn').disabled = false;
@@ -125,65 +135,39 @@
     }
 
     function unlock() {
-        if (attempt >= 5) {
-            document.getElementById('msg').innerText = "Too many attempts";
-            return;
-        }
-
-        const input = document.getElementById('password').value;
-        const hash = CryptoJS.SHA256(input).toString();
-
-        if (hash !== HASH) {
+        if (attempt >= 5) return;
+        const pw = document.getElementById('password').value;
+        if (CryptoJS.SHA256(pw).toString() === HASH) {
+            loadSource();
+        } else {
             attempt++;
-            document.getElementById('msg').innerText = `Wrong Password (剩餘 ${5 - attempt} 次)`;
-            return;
+            document.getElementById('msg').innerText = `Wrong Password (${5-attempt})`;
         }
-
-        loadSource();
     }
 
     async function loadSource() {
-        const msg = document.getElementById('msg');
-        msg.innerText = "Synchronizing...";
-
-        // 使用 URLSearchParams 構建請求網址，並確保強制下載
-        const url = `https://docs.google.com/uc?export=download&id=${JSON_FILE_ID}`;
-        
+        document.getElementById('msg').innerText = "Loading...";
         try {
-            const response = await fetch(url);
-            if (!response.ok) throw new Error('Network response was not ok');
-            const json = await response.json();
+            const r = await fetch(`https://docs.google.com/uc?export=download&id=${JSON_FILE_ID}`);
+            const json = await r.json();
             
-            // 解碼並渲染
-            const base64Data = json.data;
-            const html = decodeURIComponent(atob(base64Data).split('').map(function(c) {
-                return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-            }).join(''));
+            // 安全解碼 (支援中文)
+            const html = decodeURIComponent(atob(json.data).split('').map(c => 
+                '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)
+            ).join(''));
 
-            document.getElementById('login-screen').style.display = "none";
+            document.getElementById('login-ui').style.display = "none";
             const main = document.getElementById('content-main');
             main.style.display = "block";
             main.innerHTML = html;
-            window.scrollTo(0, 0);
-
+            window.scrollTo(0,0);
         } catch (e) {
-            // 如果 fetch 失敗，可能是 CORS 問題，提供一個備用的 iframe 方法
-            msg.innerHTML = "權限限制，正在嘗試備用載入...";
-            console.error(e);
-            
-            // 備用方案：如果 JSON 抓不到，嘗試直接跳轉到 preview 模式
-            setTimeout(() => {
-                window.location.href = `https://drive.google.com/file/d/${JSON_FILE_ID}/preview`;
-            }, 1500);
+            document.getElementById('msg').innerText = "載入失敗，請檢查權限";
         }
     }
 
-    document.getElementById('password').addEventListener("keydown", e => {
-        if (e.key === "Enter") unlock();
-    });
-
+    document.getElementById('password').addEventListener("keydown", e => { if (e.key === "Enter") unlock(); });
     init();
 </script>
-
 </body>
 </html>

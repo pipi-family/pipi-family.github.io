@@ -1,325 +1,147 @@
-<!-- 書籤網頁入口 ＃第＿2＿版 2026/03/07 編輯 -->
 <!DOCTYPE html>
 <html lang="zh-Hant">
-
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex,nofollow">
+    <title>Private Bookmark</title>
 
-<meta charset="UTF-8">
-<meta name="robots" content="noindex,nofollow">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="shortcut icon" href="/favicon/favicon.ico" type="image/x-icon">
+    <link rel="icon" href="/favicon/favicon.ico" type="image/x-icon">
+    <link rel="icon" type="image/gif" href="/favicon/animated_favicon1.gif">
 
-<title>Bookmark Dashboard</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 
-<link rel="icon" href="/favicon/favicon.ico">
+    <style>
+        @import url(//fonts.googleapis.com/css?family=Lato:300:400);
+        body { margin: 0; font-family: 'Lato', sans-serif; background: #EBEBEB; overflow-x: hidden; }
+        
+        .header {
+            position: relative;
+            text-align: center;
+            background: linear-gradient(60deg, #543ab7 0%, #00acc1 100%);
+            color: white;
+        }
+        .inner-header {
+            height: 60vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
 
-<style>
+        .login-box { z-index: 10; margin-top: 20px; }
+        input {
+            padding: 12px; border-radius: 25px; border: none;
+            width: 220px; text-align: center; font-size: 16px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2); outline: none;
+        }
+        button {
+            padding: 10px 30px; margin-top: 15px; border-radius: 25px;
+            border: 2px solid white; background: transparent; color: white;
+            cursor: pointer; font-weight: bold; transition: 0.3s;
+        }
+        button:hover { background: white; color: #00acc1; }
+        #msg { font-size: 13px; margin-top: 10px; color: #ffdede; min-height: 1.2em; }
 
-body{
-margin:0;
-font-family:Arial;
-color:white;
-background:#0f172a;
-overflow-x:hidden;
-}
+        /* 波浪動畫 */
+        .waves { position: relative; width: 100%; height: 15vh; margin-bottom: -7px; min-height: 100px; max-height: 150px; }
+        .parallax > use { animation: move-forever 25s cubic-bezier(.55,.5,.45,.5) infinite; }
+        .parallax > use:nth-child(1) { animation-delay: -2s; animation-duration: 7s; }
+        .parallax > use:nth-child(2) { animation-delay: -3s; animation-duration: 10s; }
+        .parallax > use:nth-child(3) { animation-delay: -4s; animation-duration: 13s; }
+        .parallax > use:nth-child(4) { animation-delay: -5s; animation-duration: 20s; }
+        @keyframes move-forever { 0% { transform: translate3d(-90px,0,0); } 100% { transform: translate3d(85px,0,0); } }
 
-/* animated gradient background */
-
-body::before{
-
-content:"";
-position:fixed;
-width:200%;
-height:200%;
-top:-50%;
-left:-50%;
-
-background:
-radial-gradient(circle at 20% 20%,#6366f1,transparent 30%),
-radial-gradient(circle at 80% 30%,#06b6d4,transparent 30%),
-radial-gradient(circle at 40% 80%,#9333ea,transparent 30%);
-
-animation:bgMove 25s linear infinite;
-z-index:-1;
-
-}
-
-@keyframes bgMove{
-
-0%{transform:rotate(0deg)}
-100%{transform:rotate(360deg)}
-
-}
-
-/* header */
-
-header{
-
-text-align:center;
-padding:60px 20px 30px;
-
-}
-
-h1{
-margin:0;
-font-weight:300;
-letter-spacing:2px;
-}
-
-/* search */
-
-.searchBox{
-
-margin-top:30px;
-
-}
-
-.searchBox input{
-
-width:320px;
-padding:14px;
-border-radius:30px;
-border:none;
-font-size:16px;
-text-align:center;
-
-}
-
-/* container */
-
-.container{
-
-max-width:1000px;
-margin:auto;
-padding:40px;
-
-}
-
-/* category */
-
-.category{
-
-margin-bottom:40px;
-
-}
-
-.category h2{
-
-font-weight:400;
-border-bottom:1px solid rgba(255,255,255,0.2);
-padding-bottom:8px;
-
-}
-
-/* cards */
-
-.grid{
-
-display:grid;
-grid-template-columns:repeat(auto-fill,minmax(140px,1fr));
-gap:18px;
-
-}
-
-.card{
-
-background:rgba(255,255,255,0.08);
-border-radius:14px;
-padding:18px;
-text-align:center;
-cursor:pointer;
-transition:0.2s;
-
-}
-
-.card:hover{
-
-transform:translateY(-4px);
-background:rgba(255,255,255,0.15);
-
-}
-
-.card img{
-
-width:32px;
-height:32px;
-margin-bottom:8px;
-
-}
-
-/* dark mode button */
-
-.darkToggle{
-
-position:fixed;
-top:15px;
-right:20px;
-cursor:pointer;
-font-size:14px;
-opacity:0.7;
-
-}
-
-/* hidden link */
-
-.hiddenLink{
-
-position:fixed;
-bottom:5px;
-right:10px;
-font-size:8px;
-opacity:0.05;
-
-}
-
-</style>
-
+        /* 內容顯示區 */
+        #content-area { display: none; width: 100%; background: #fff; min-height: 100vh; }
+    </style>
 </head>
 
 <body>
 
-<div class="darkToggle" onclick="toggleDark()">☾</div>
+<div id="login-ui" class="header">
+    <div class="inner-header">
+        <h1>Private Bookmark</h1>
+        <div class="login-box">
+            <input type="password" id="password" placeholder="請輸入密碼">
+            <br>
+            <button id="unlockBtn" onclick="unlock()">UNLOCK</button>
+            <p id="msg"></p>
+        </div>
+    </div>
 
-<header>
-
-<h1>Bookmark Dashboard</h1>
-
-<div class="searchBox">
-
-<input
-id="search"
-placeholder="Search with Google"
-onkeydown="searchEnter(event)">
-
+    <svg class="waves" xmlns="http://www.w3.org/2000/svg" viewBox="0 24 150 28" preserveAspectRatio="none">
+        <defs><path id="wave" d="M-160 44c30 0 58-18 88-18s58 18 88 18 58-18 88-18 58 18 88 18v44h-352z"/></defs>
+        <g class="parallax">
+            <use href="#wave" x="48" y="0" fill="rgba(255,255,255,0.7)"/>
+            <use href="#wave" x="48" y="3" fill="rgba(255,255,255,0.5)"/>
+            <use href="#wave" x="48" y="5" fill="rgba(255,255,255,0.3)"/>
+            <use href="#wave" x="48" y="7" fill="#fff"/>
+        </g>
+    </svg>
 </div>
 
-</header>
-
-<div class="container">
-
-<!-- AI -->
-
-<div class="category">
-
-<h2>AI</h2>
-
-<div class="grid">
-
-<div class="card"
-onclick="go('https://chat.openai.com')">
-
-<img src="https://www.google.com/s2/favicons?domain=openai.com">
-<br>ChatGPT
-
-</div>
-
-<div class="card"
-onclick="go('https://claude.ai')">
-
-<img src="https://www.google.com/s2/favicons?domain=claude.ai">
-<br>Claude
-
-</div>
-
-<div class="card"
-onclick="go('https://gemini.google.com')">
-
-<img src="https://www.google.com/s2/favicons?domain=google.com">
-<br>Gemini
-
-</div>
-
-</div>
-
-</div>
-
-<!-- Tools -->
-
-<div class="category">
-
-<h2>Tools</h2>
-
-<div class="grid">
-
-<div class="card"
-onclick="go('https://github.com')">
-
-<img src="https://www.google.com/s2/favicons?domain=github.com">
-<br>GitHub
-
-</div>
-
-<div class="card"
-onclick="go('https://drive.google.com')">
-
-<img src="https://www.google.com/s2/favicons?domain=drive.google.com">
-<br>Drive
-
-</div>
-
-<div class="card"
-onclick="go('https://notion.so')">
-
-<img src="https://www.google.com/s2/favicons?domain=notion.so">
-<br>Notion
-
-</div>
-
-</div>
-
-</div>
-
-</div>
-
-<!-- hidden source -->
-
-<a class="hiddenLink" href="source.html">.</a>
+<div id="content-area"></div>
 
 <script>
+    // 密碼雜湊碼 (^.^_@_0505)
+    const CORRECT_HASH = "b6a06657871e9565507981882f09405f6e864819d9b04f76239f60f699049449";
+    // 您的 source.json 檔案 ID
+    const JSON_FILE_ID = "1GaBrL5ZFgOEXRJvoChS_S0XmiK99UdYj";
 
-/* open site */
+    let attempts = 0;
 
-function go(url){
+    async function unlock() {
+        const pw = document.getElementById('password').value;
+        const hash = CryptoJS.SHA256(pw).toString();
+        const msg = document.getElementById('msg');
 
-window.open(url)
+        if (attempts >= 5) {
+            msg.innerText = "嘗試次數過多，請稍後再試";
+            return;
+        }
 
-}
+        if (hash === CORRECT_HASH) {
+            msg.innerText = "驗證成功，正在同步內容...";
+            
+            try {
+                // 1. 從 Google Drive 抓取 JSON
+                const url = `https://docs.google.com/uc?export=download&id=${JSON_FILE_ID}`;
+                const res = await fetch(url);
+                const data = await res.json();
+                
+                // 2. 穩定版 Base64 解碼 (支援 UTF-8 中文)
+                const base64Content = data.content;
+                const decodedHtml = decodeURIComponent(atob(base64Content).split('').map(function(c) {
+                    return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+                }).join(''));
 
-/* google search */
+                // 3. 隱藏登入介面並注入內容
+                document.getElementById('login-ui').style.display = "none";
+                const contentArea = document.getElementById('content-area');
+                contentArea.style.display = "block";
+                contentArea.innerHTML = decodedHtml;
+                
+                // 捲動至頂部
+                window.scrollTo(0,0);
 
-function searchEnter(e){
+            } catch (e) {
+                msg.innerText = "內容還原失敗，請檢查 JSON 權限或格式。";
+                console.error("Error details:", e);
+            }
+        } else {
+            attempts++;
+            msg.innerText = `密碼錯誤 (剩餘 ${5 - attempts} 次嘗試)`;
+            document.getElementById('password').value = "";
+        }
+    }
 
-if(e.key==="Enter"){
-
-let q=document.getElementById("search").value
-
-window.open(
-"https://www.google.com/search?q="+encodeURIComponent(q)
-)
-
-}
-
-}
-
-/* dark mode */
-
-function toggleDark(){
-
-if(document.body.style.background=="white"){
-
-document.body.style.background="#0f172a"
-document.body.style.color="white"
-
-}else{
-
-document.body.style.background="white"
-document.body.style.color="black"
-
-}
-
-}
-
+    // 監聽 Enter 鍵
+    document.getElementById('password').addEventListener("keydown", e => {
+        if (e.key === "Enter") unlock();
+    });
 </script>
 
 </body>
-
 </html>

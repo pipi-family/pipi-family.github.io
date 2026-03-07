@@ -6,144 +6,120 @@
     <title>Private Bookmark</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <style>
-        /* 1. 移除邊距，解決右側 Bar 問題 */
-        body { margin: 0; padding: 0; font-family: Arial; background: #fff; overflow-x: hidden; }
-
+        body { margin: 0; padding: 0; font-family: Arial, sans-serif; background: #fff; overflow-x: hidden; }
         .header {
-            position: relative;
-            text-align: center;
+            position: relative; text-align: center;
             background: linear-gradient(60deg, #543ab7, #00acc1);
-            color: white;
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
+            color: white; height: 100vh; display: flex; flex-direction: column;
         }
-
-        .inner-header {
-            flex: 1;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            flex-direction: column;
-            padding-bottom: 5vh; /* 讓標題與輸入框稍微往上，留出空間給波浪 */
-        }
-
-        input {
-            padding: 12px; border-radius: 25px; border: none;
-            width: 240px; text-align: center; font-size: 16px;
-            outline: none; box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-        }
-
-        button {
-            padding: 10px 30px; margin-top: 15px; border-radius: 25px;
-            border: 2px solid white; background: transparent;
-            color: white; font-weight: bold; cursor: pointer; transition: 0.3s;
-        }
+        .inner-header { flex: 1; display: flex; justify-content: center; align-items: center; flex-direction: column; z-index: 10; }
+        h1 { font-weight: 300; letter-spacing: 2px; font-size: 36px; margin-bottom: 20px; }
+        input { padding: 12px 20px; border-radius: 25px; border: none; width: 220px; text-align: center; font-size: 16px; outline: none; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+        button { padding: 10px 35px; margin-top: 20px; border-radius: 25px; border: 2px solid white; background: transparent; color: white; font-weight: bold; cursor: pointer; transition: 0.3s; }
         button:hover { background: white; color: #00acc1; }
+        #msg { margin-top: 15px; font-size: 14px; color: #ffdede; min-height: 1.2em; font-weight: bold; }
 
-        #msg { margin-top: 10px; font-size: 14px; color: #ffdede; }
-
-        /* 2. 波浪高度調整：降低波浪佔比，並確保下方無縫對接白底 */
-        .waves {
-            position: relative;
-            width: 100%;
-            height: 10vh; /* 降低波浪整體視覺高度 */
-            min-height: 80px;
-            max-height: 120px;
-            margin-bottom: -1px; /* 消除與底部的細微縫隙 */
-            display: block;
-        }
-
-        .parallax > use { animation: move 25s cubic-bezier(.55,.5,.45,.5) infinite; }
+        /* 經典 6 層波浪視覺效果 */
+        .waves { position: relative; width: 100%; height: 15vh; min-height: 100px; max-height: 150px; margin-top: -15vh; }
+        .parallax > use { animation: move-forever 25s cubic-bezier(.55,.5,.45,.5) infinite; }
         .parallax > use:nth-child(1) { animation-delay: -2s; animation-duration: 7s; }
         .parallax > use:nth-child(2) { animation-delay: -3s; animation-duration: 10s; }
         .parallax > use:nth-child(3) { animation-delay: -4s; animation-duration: 13s; }
         .parallax > use:nth-child(4) { animation-delay: -5s; animation-duration: 20s; }
         .parallax > use:nth-child(5) { animation-delay: -6s; animation-duration: 15s; }
         .parallax > use:nth-child(6) { animation-delay: -7s; animation-duration: 25s; }
+        @keyframes move-forever { 0% { transform: translate3d(-90px,0,0); } 100% { transform: translate3d(85px,0,0); } }
 
-        @keyframes move {
-            0% { transform: translate3d(-90px,0,0); }
-            100% { transform: translate3d(85px,0,0); }
-        }
-
-        #content-main { display: none; width: 100%; min-height: 100vh; background: #fff; }
+        /* 主內容區域（預設隱藏） */
+        #content-main { display: none; width: 100%; min-height: 100vh; background: #fff; position: absolute; top: 0; left: 0; z-index: 999; }
     </style>
 </head>
-
 <body>
 
-<div id="login-screen" class="header">
+<div id="login-ui" class="header">
     <div class="inner-header">
-        <h1>Private Bookmark</h1>
-        <input type="password" id="password" placeholder="輸入密碼">
+        <h1>Private Vault</h1>
+        <input type="password" id="password" placeholder="ENTER PASSWORD">
         <br>
-        <button id="unlockBtn" onclick="unlock()">UNLOCK</button>
+        <button onclick="unlock()">UNLOCK</button>
         <p id="msg"></p>
     </div>
 
-    <svg class="waves" xmlns="http://www.w3.org/2000/svg" viewBox="0 24 150 28" preserveAspectRatio="none">
-        <defs><path id="wave" d="M-160 44c30 0 58-18 88-18s58 18 88 18 58-18 88-18 58 18 88 18 v44h-352z"/></defs>
+    <svg class="waves" xmlns="http://www.w3.org/2000/svg" viewBox="0 24 150 28" preserveAspectRatio="none" shape-rendering="auto">
+        <defs><path id="gentle-wave" d="M-160 44c30 0 58-18 88-18s58 18 88 18 58-18 88-18 58 18 88 18 v44h-352z"/></defs>
         <g class="parallax">
-            <use href="#wave" x="48" y="0" fill="rgba(255,255,255,0.6)"/>
-            <use href="#wave" x="48" y="1" fill="rgba(255,255,255,0.4)"/>
-            <use href="#wave" x="48" y="2" fill="rgba(255,255,255,0.2)"/>
-            <use href="#wave" x="48" y="3" fill="rgba(255,255,255,0.4)"/>
-            <use href="#wave" x="48" y="4" fill="rgba(255,255,255,0.3)"/>
-            <use href="#wave" x="48" y="5" fill="#fff"/> </g>
+            <use href="#gentle-wave" x="48" y="0" fill="rgba(255,255,255,0.7)"/>
+            <use href="#gentle-wave" x="48" y="3" fill="rgba(255,255,255,0.5)"/>
+            <use href="#gentle-wave" x="48" y="5" fill="rgba(255,255,255,0.3)"/>
+            <use href="#gentle-wave" x="48" y="7" fill="rgba(255,255,255,0.2)"/>
+            <use href="#gentle-wave" x="48" y="9" fill="rgba(255,255,255,0.1)"/>
+            <use href="#gentle-wave" x="48" y="12" fill="#fff"/>
+        </g>
     </svg>
 </div>
 
 <div id="content-main"></div>
 
 <script>
-    const PASS_URL = "pass.json";
-    const JSON_FILE_ID = "1GaBrL5ZFgOEXRJvoChS_S0XmiK99UdYj";
-    let HASH = "";
-    let attempt = 0;
+    const CFG = {
+        user: "pipi-family",
+        repo: "my-private-data",
+        token: "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" // 請在此填入您的 GitHub Token
+    };
 
-    async function init() {
+    // GitHub API 抓取函式
+    async function fetchFromVault(file) {
+        const url = `https://api.github.com/repos/${CFG.user}/${CFG.repo}/contents/${file}`;
+        const res = await fetch(url, {
+            headers: { "Authorization": `token ${CFG.token}` }
+        });
+        
+        if (!res.ok) throw new Error("API 存取失敗");
+        
+        const data = await res.json();
+        // GitHub API 回傳為 Base64 編碼，需還原並處理特殊字元
+        const base64Content = data.content.replace(/\s/g, '');
+        return decodeURIComponent(atob(base64Content).split('').map(c => 
+            '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)
+        ).join(''));
+    }
+
+    async function unlock() {
+        const msg = document.getElementById('msg');
+        const pwd = document.getElementById('password').value;
+        const hash = CryptoJS.SHA256(pwd).toString();
+        
+        msg.innerText = "Connecting to Secure Vault...";
+
         try {
-            let r = await fetch(PASS_URL);
-            let data = await r.json();
-            HASH = data.hash;
+            // 1. 抓取私密庫中的 pass.json
+            const passStr = await fetchFromVault("pass.json");
+            const storedHash = JSON.parse(passStr).hash;
+
+            // 2. 比對 Hash
+            if (hash === storedHash) {
+                msg.innerText = "Password Verified. Loading Content...";
+                
+                // 3. 抓取私密庫中的 source.html
+                const html = await fetchFromVault("source.html");
+                
+                // 4. 渲染頁面
+                document.getElementById('login-ui').style.display = "none";
+                const main = document.getElementById('content-main');
+                main.style.display = "block";
+                main.innerHTML = html;
+                window.scrollTo(0, 0);
+            } else {
+                msg.innerText = "Password Denied.";
+            }
         } catch (e) {
-            document.getElementById('msg').innerText = "pass.json 讀取失敗";
+            msg.innerText = "Error: Please check Token or Network.";
+            console.error(e);
         }
     }
 
-    function unlock() {
-        if (attempt >= 5) return;
-        const input = document.getElementById('password').value;
-        if (CryptoJS.SHA256(input).toString() === HASH) {
-            loadSource();
-        } else {
-            attempt++;
-            document.getElementById('msg').innerText = `Wrong Password (${5-attempt})`;
-        }
-    }
-
-    async function loadSource() {
-        document.getElementById('msg').innerText = "Synchronizing...";
-        try {
-            const r = await fetch(`https://docs.google.com/uc?export=download&id=${JSON_FILE_ID}`);
-            const json = await r.json();
-            const html = decodeURIComponent(atob(json.data).split('').map(c => 
-                '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)
-            ).join(''));
-
-            document.getElementById('login-screen').style.display = "none";
-            const main = document.getElementById('content-main');
-            main.style.display = "block";
-            main.innerHTML = html;
-        } catch (e) {
-            document.getElementById('msg').innerText = "載入失敗";
-        }
-    }
-
+    // 支援 Enter 鍵解鎖
     document.getElementById('password').addEventListener("keydown", e => { if (e.key === "Enter") unlock(); });
-    init();
 </script>
-
 </body>
 </html>

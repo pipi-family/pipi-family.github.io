@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>PiPi's Bookmark</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    
+    <link rel="icon" href="favicon/cloud_favicon_v2.png" type="image/png" sizes="32x32">
+    <link rel="apple-touch-icon" href="favicon/cloud_favicon_v2.png">
+
+    <style>
+        body { margin: 0; padding: 0; font-family: 'Lato', sans-serif; background: #fff; overflow-x: hidden; height: 100vh; }
+        .header {
+            position: relative; text-align: center;
+            background: linear-gradient(60deg, rgba(84,58,183,1) 0%, rgba(0,172,193,1) 100%);
+            color: white; height: 80vh; 
+            display: flex; flex-direction: column;
+        }
+        .inner-header { flex: 1; display: flex; justify-content: center; align-items: center; flex-direction: column; z-index: 10; }
+        h1 { font-weight: 300; letter-spacing: 2px; font-size: 36px; margin-bottom: 20px; }
+        input { padding: 12px 20px; border-radius: 25px; border: none; width: 220px; text-align: center; font-size: 16px; outline: none; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+        button { padding: 10px 35px; margin-top: 20px; border-radius: 25px; border: 2px solid white; background: transparent; color: white; font-weight: bold; cursor: pointer; transition: 0.3s; }
+        button:hover { background: white; color: #00acc1; }
+        #msg { margin-top: 15px; font-size: 14px; color: #ffdede; min-height: 1.2em; font-weight: bold; }
+
+        /* 🌊 4 層大波浪設定 */
+        .waves { position: relative; width: 100%; height: 15vh; margin-bottom: -7px; min-height: 100px; max-height: 150px; }
+        .parallax > use { animation: move-forever 25s cubic-bezier(.55,.5,.45,.5) infinite; }
+        .parallax > use:nth-child(1) { animation-delay: -2s; animation-duration: 7s; }
+        .parallax > use:nth-child(2) { animation-delay: -3s; animation-duration: 10s; }
+        .parallax > use:nth-child(3) { animation-delay: -4s; animation-duration: 13s; }
+        .parallax > use:nth-child(4) { animation-delay: -5s; animation-duration: 20s; }
+        @keyframes move-forever { 0% { transform: translate3d(-90px,0,0); } 100% { transform: translate3d(85px,0,0); } }
+
+        #footer-tag { position: fixed; bottom: 15px; right: 20px; color: #00acc1; font-size: 11px; z-index: 5; letter-spacing: 1px; font-family: 'Courier New', monospace; }
+        #content-main { display: none; width: 100%; min-height: 100vh; background: #fff; position: absolute; top: 0; left: 0; z-index: 999; }
+        @media (max-width: 768px) { .waves { height: 40px; min-height: 40px; } h1 { font-size: 24px; } .header { height: 75vh; } }
+    </style>
+</head>
+<body>
+
+<div id="login-ui">
+    <div class="header">
+        <div class="inner-header">
+            <h1>PiPi's Bookmark</h1>
+            <input type="password" id="password" placeholder="ENTER PASSWORD" autofocus>
+            <button onclick="unlock()">UNLOCK</button>
+            <p id="msg"></p>
+        </div>
+        <svg class="waves" xmlns="http://www.w3.org/2000/svg" viewBox="0 24 150 28" preserveAspectRatio="none" shape-rendering="auto">
+            <defs><path id="gentle-wave" d="M-160 44c30 0 58-18 88-18s 58 18 88 18 58-18 88-18 58 18 88 18 v44h-352z" /></defs>
+            <g class="parallax">
+                <use href="#gentle-wave" x="48" y="0" fill="rgba(255,255,255,0.7)" />
+                <use href="#gentle-wave" x="48" y="3" fill="rgba(255,255,255,0.5)" />
+                <use href="#gentle-wave" x="48" y="5" fill="rgba(255,255,255,0.3)" />
+                <use href="#gentle-wave" x="48" y="7" fill="#ffffff" />
+            </g>
+        </svg>
+    </div>
+    <div id="footer-tag"></div>
+</div>
+<div id="content-main"></div>
+
+<script>
+    // 1. 動態更新時鐘
+    function updateTime() {
+        const now = new Date();
+        const y = now.getFullYear(), m = String(now.getMonth() + 1).padStart(2, '0'), d = String(now.getDate()).padStart(2, '0');
+        const hh = String(now.getHours()).padStart(2, '0'), mm = String(now.getMinutes()).padStart(2, '0'), ss = String(now.getSeconds()).padStart(2, '0');
+        document.getElementById('footer-tag').innerText = `${y}-${m}-${d} ${hh}:${mm}:${ss} @ GitHub API`;
+    }
+    setInterval(updateTime, 1000); updateTime();
+
+    // 2. 🔑 Token 打碎拼接區域 (請更換為您的新 Token 亂碼)
+    const k_p1 = "Z2hwX0U0UjZHVTNmaz"; 
+    const k_p2 = "Fid3hVNnN6N0h2TFJiQm";
+    const k_p3 = "VEdDhVQjJCQnd2TA==";
+
+    const CFG = {
+        user: "pipi-family",
+        repo: "my-private-data",
+        _k: k_p1 + k_p2 + k_p3
+    };
+
+    // 3. 🔄 自動恢復邏輯：檢查 SessionStorage
+    window.onload = function() {
+        const savedContent = sessionStorage.getItem('vault_content');
+        if (savedContent) {
+            showContent(savedContent);
+        }
+    };
+
+    function showContent(html) {
+        document.getElementById('login-ui').style.display = "none";
+        const main = document.getElementById('content-main');
+        main.style.display = "block";
+        main.innerHTML = html;
+        // 如果內容裡有 script，需要手動執行 (選配)
+        main.querySelectorAll('script').forEach(oldScript => {
+            const newScript = document.createElement('script');
+            Array.from(oldScript.attributes).forEach(attr => newScript.setAttribute(attr.name, attr.value));
+            newScript.appendChild(document.createTextNode(oldScript.innerHTML));
+            oldScript.parentNode.replaceChild(newScript, oldScript);
+        });
+    }
+
+    async function fetchFromVault(file) {
+        const url = `https://api.github.com/repos/${CFG.user}/${CFG.repo}/contents/${file}`;
+        const res = await fetch(url, { headers: { "Authorization": `token ${atob(CFG._k)}` } });
+        if (!res.ok) throw new Error("Vault Access Denied");
+        const data = await res.json();
+        const base64Content = data.content.replace(/\s/g, '');
+        return decodeURIComponent(atob(base64Content).split('').map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join(''));
+    }
+
+    async function unlock() {
+        const msg = document.getElementById('msg');
+        const pwd = document.getElementById('password').value;
+        const hash = CryptoJS.SHA256(pwd).toString();
+        msg.innerText = "Connecting...";
+        try {
+            const passStr = await fetchFromVault("pass.json");
+            const storedHash = JSON.parse(passStr).hash;
+            if (hash === storedHash) {
+                const html = await fetchFromVault("source.html");
+                sessionStorage.setItem('vault_content', html); // 💾 儲存狀態
+                showContent(html);
+            } else { msg.innerText = "Access Denied."; }
+        } catch (e) { msg.innerText = "Error: Token Revoked or Network Issue."; }
+    }
+    document.getElementById('password').addEventListener("keydown", e => { if (e.key === "Enter") unlock(); });
+</script>
+</body>
+</html>

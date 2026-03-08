@@ -14,6 +14,7 @@
             --code-bg: #272822;
         }
         
+        /* 全域字體強制 16px */
         body {
             margin: 0;
             display: flex;
@@ -21,9 +22,10 @@
             font-size: 16px;
             color: var(--text-color);
             line-height: 1.6;
+            background-color: #ffffff;
         }
 
-        /* 左側導覽列：字體放大至 18px，增加點擊感 */
+        /* 左側導覽列：字體放大至 18px */
         nav {
             width: 340px;
             height: 100vh;
@@ -33,9 +35,16 @@
             padding: 40px 25px;
             box-sizing: border-box;
             overflow-y: auto;
+            z-index: 1000;
         }
-        nav h2 { font-size: 22px; margin-bottom: 30px; color: var(--primary-color); border-bottom: 2px solid #ddd; padding-bottom: 10px; }
-        nav ul { list-style: none; padding: 0; }
+        nav h2 { 
+            font-size: 22px; 
+            margin-bottom: 30px; 
+            color: var(--primary-color); 
+            border-bottom: 2px solid #ddd; 
+            padding-bottom: 10px;
+        }
+        nav ul { list-style: none; padding: 0; margin: 0; }
         nav li { margin-bottom: 18px; }
         nav a {
             text-decoration: none;
@@ -45,19 +54,23 @@
             display: block;
             padding: 10px 15px;
             border-radius: 8px;
-            transition: 0.2s ease;
+            transition: all 0.2s ease;
         }
-        nav a:hover { background-color: #ebf5ff; padding-left: 25px; }
+        nav a:hover { 
+            background-color: #ebf5ff; 
+            padding-left: 25px;
+            color: #0056b3;
+        }
 
         /* 右側主內容區 */
         main {
             margin-left: 340px;
-            padding: 60px 80px;
-            max-width: 900px;
+            padding: 60px 100px;
+            max-width: 1000px;
             flex: 1;
         }
-        h1 { border-bottom: 2px solid #eaecef; padding-bottom: 20px; font-size: 36px; }
-        h2 { margin-top: 60px; border-left: 8px solid var(--accent-color); padding-left: 20px; font-size: 28px; }
+        h1 { border-bottom: 2px solid #eaecef; padding-bottom: 20px; font-size: 36px; color: var(--primary-color); }
+        h2 { margin-top: 60px; border-left: 8px solid var(--accent-color); padding-left: 20px; font-size: 28px; color: #24292e; }
         
         /* 特別強調區塊 */
         .step-zero { 
@@ -66,38 +79,61 @@
             padding: 30px; 
             border-radius: 12px; 
             margin: 30px 0;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+        .highlight-box {
+            background: #fff4da;
+            border-left: 5px solid #e6a23c;
+            padding: 25px;
+            border-radius: 8px;
+            margin: 25px 0;
+            font-size: 16px;
         }
 
-        /* 目錄結構：white-space 確保不跑掉 */
+        /* 目錄結構專用樣式 */
         .tree-box {
             background: var(--primary-color);
             color: #e6edf3;
             padding: 30px;
             border-radius: 12px;
-            font-family: "Cascadia Code", monospace;
+            font-family: "Cascadia Code", "Courier New", monospace;
             font-size: 16px;
             line-height: 1.5;
+            margin: 25px 0;
             white-space: pre; 
             overflow-x: auto;
-            margin: 25px 0;
+            border: 1px solid #444;
         }
         .dir-comment { color: #8b949e; font-style: italic; }
 
-        /* 代碼區塊 */
+        /* 代碼區塊樣式 */
         .code-block {
             background: var(--code-bg);
             color: #f8f8f2;
             padding: 25px;
             border-radius: 12px;
             font-family: "Consolas", monospace;
+            margin: 25px 0;
             font-size: 16px;
             white-space: pre;
             overflow-x: auto;
-            margin: 25px 0;
+            line-height: 1.5;
         }
         .comment-tag { color: #75715e; font-style: italic; }
+        
+        footer { 
+            margin-top: 80px; 
+            color: #6a737d; 
+            font-size: 14px; 
+            text-align: center; 
+            border-top: 1px solid #eee; 
+            padding: 40px 0; 
+        }
 
-        footer { margin-top: 80px; color: #6a737d; text-align: center; border-top: 1px solid #eee; padding: 40px 0; }
+        @media (max-width: 1024px) {
+            nav { display: none; }
+            main { margin-left: 0; padding: 40px; }
+        }
     </style>
 </head>
 <body>
@@ -106,83 +142,97 @@
     <h2>🚀 無痛建置手冊</h2>
     <ul>
         <li><a href="#sec0">🔑 0. 加密地基：Hash</a></li>
-        <li><a href="#sec1">📦 1. 雙倉庫：入口與數據</a></li>
-        <li><a href="#tree">📁 2. 地圖：目錄結構詳解</a></li>
-        <li><a href="#sec2">🔒 3. 程序：btoa 轉碼註解</a></li>
-        <li><a href="#sec3">🧪 4. 防禦：Token 碎裂化</a></li>
-        <li><a href="#sec4">🖼️ 5. 視覺：全域透明修補</a></li>
-        <li><a href="#sec5">🔄 6. 體驗：Session 自動恢復</a></li>
+        <li><a href="#sec1">📦 1. 雙倉庫分離戰略</a></li>
+        <li><a href="#tree">📁 2. 目錄結構詳解</a></li>
+        <li><a href="#sec2">🔑 3. 取得 API Key</a></li>
+        <li><a href="#sec3">🧪 4. btoa 轉碼程序</a></li>
+        <li><a href="#sec4">🖼️ 5. 全域透明 UI 修補</a></li>
+        <li><a href="#sec5">🔄 6. Session 恢復機制</a></li>
     </ul>
 </nav>
 
 <main>
-    <h1>GitHub Pages 安全金庫無痛建置指南</h1>
-    <p>本指南將引導你完成一個「源碼公開、數據私密」的網頁架構。只要照著程序走，你就能在不碰壁的情況下，成功建立屬於自己的安全空間。</p>
+    <h1>GitHub Pages 安全金庫建置指南</h1>
+    <p>這是一份標準化建置 SOP，旨在協助您在公開的 GitHub 環境中，透過技術手段達成「源碼公開、數據私密」的目標。</p>
 
     <h2 id="sec0">0. 第零階段：帳號對接與加密地基</h2>
     <div class="step-zero">
-        <strong>⚠️ 這是最關鍵的地基作業：</strong>
-        <p>1. <strong>帳號精確對接</strong>：請先確認你的 GitHub ID 與 Private Repo 名稱。API 調用時路徑若錯一字，後續將全盤失效。</p>
-        <p>2. <strong>SHA-256 密碼雜湊 (Hash)</strong>：
+        <strong>🔐 這是所有建置的邏輯起點：</strong>
+        <p>1. <strong>帳號對接</strong>：定義 GitHub User ID 與目的 Repo，這是程式碼抓取資料的絕對座標。</p>
+        <p>2. <strong>SHA-256 密碼雜湊</strong>：
             <ul>
-                <li><strong>禁止存儲明文</strong>：將你的登入密碼轉為 SHA-256 Hash。</li>
-                <li><strong>驗證邏輯</strong>：你的網頁只負責比對「雜湊後的字串」，這樣即便 <code>pass.json</code> 公開，也沒人知道你的原始密碼。</li>
+                <li>將密碼轉成 SHA-256 雜湊值存入 <code>pass.json</code>。</li>
+                <li><strong>核心邏輯</strong>：網頁只比對「雜湊結果」，不存儲「真實密碼」。</li>
             </ul>
         </p>
     </div>
-    
 
     <h2 id="sec1">1. 雙倉庫 (Repo) 分離戰略</h2>
-    <p>採用「分流管理」：入口在明處，數據在暗處。</p>
-    <ul>
-        <li><strong>Public Repo (入口)</strong>：放置 <code>index.html</code> (你的門面與解鎖程式)。</li>
-        <li><strong>Private Repo (數據)</strong>：放置 <code>source.html</code> (真正的私密內容) 與 <code>pass.json</code> (密碼比對檔)。</li>
-    </ul>
+    <p>透過物理隔離達成安全性：入口在明 (Public)，資料在暗 (Private)。</p>
 
     <h2 id="tree">2. 關鍵：雙倉庫目錄結構詳解</h2>
-    <p>維持以下目錄結構，並確保兩邊「資料夾名稱」一致，達成路徑無痛對接：</p>
+    <p>維持以下目錄結構，確保兩邊路徑無痛對接，不產生 404 錯誤：</p>
     <div class="tree-box">
 GitHub // 您的帳號
 ┣━ 🌐 Public Repo (pipi-family.github.io)
-┃   ┣ 📂 background/    <span class="dir-comment">// UI 背景圖 (index.html 直接讀取)</span>
-┃   ┣ 📂 favicon/       <span class="dir-comment">// 清晰標籤圖示</span>
-┃   ┗ 📄 index.html      <span class="dir-comment">// 🔒 入口核心程式</span>
+┃   ┣ 📂 background/    <span class="dir-comment">// 🖼️ 背景圖 (瀏覽器直接讀取)</span>
+┃   ┣ 📂 favicon/       <span class="dir-comment">// ☁️ 清晰版分頁圖示</span>
+┃   ┗ 📄 index.html      <span class="dir-comment">// 🔒 金庫大門 (解鎖邏輯)</span>
 ┃
 ┗━ 🔒 Private Repo (my-private-data)
-    ┣ 📂 background/    <span class="dir-comment">// 📦 懶人同步 (確保 source.html 預覽不破圖)</span>
-    ┣ 📄 pass.json      <span class="dir-comment">// 🔐 密碼 SHA-256 雜湊值</span>
-    ┗ 📄 source.html    <span class="dir-comment">// 🔖 私密數據 (書籤、筆記等)</span></div>
+    ┣ 📂 background/    <span class="dir-comment">// 📦 懶人同步 (預覽 source.html 用)</span>
+    ┣ 📄 pass.json      <span class="dir-comment">// 🔐 密碼 SHA-256 雜湊</span>
+    ┗ 📄 source.html    <span class="dir-comment">// 🔖 私密書籤數據</span></div>
 
-    <h2 id="sec2">3. 核心程序：btoa 轉碼與註解規範</h2>
-    <p>為了閃避 GitHub 的掃描機器人，Token 寫入程式碼前必須先經過「btoa 轉碼」。建議在 <code>index.html</code> 頂端保留開發註解：</p>
+    <h2 id="sec2">3. 如何精確取得 GitHub API key (PAT)</h2>
+    <p>這是網頁調用私有資料的「萬能鑰匙」，請務必妥善保管：</p>
+    <div class="highlight-box">
+        <strong>取得步驟：</strong><br>
+        1. 進入 GitHub -> 點擊頭像 -> <strong>Settings</strong>。<br>
+        2. 拉到最下方 -> <strong>Developer settings</strong>。<br>
+        3. 選擇 <strong>Personal access tokens</strong> -> <strong>Tokens (classic)</strong>。<br>
+        4. 點擊 <strong>Generate new token (classic)</strong>。<br>
+        5. 權杖權限勾選 <code>repo</code> 即可。<br>
+        6. 生成後立即複製，格式應為 <code>ghp_...</code>。
+    </div>
     
+
+    <h2 id="sec3">4. 核心：btoa 轉碼程序與碎裂化</h2>
+    <p>GitHub 會自動廢除明文 <code>ghp_</code>。必須透過 <code>btoa()</code> 轉碼並打散，這是保護權杖的關鍵：</p>
+    
+    <div class="highlight-box">
+        <strong>如何執行 btoa 程序：</strong><br>
+        1. 在瀏覽器網頁按 <strong>F12</strong> 打開「開發者工具」。<br>
+        2. 點擊 <strong>Console (主控台)</strong> 標籤。<br>
+        3. 輸入：<code>btoa("你的ghp_key")</code> 並按 Enter。<br>
+        4. 複製產出的 Base64 字串（例如：<code>WjJocF...</code>）。
+    </div>
+    
+
+    <p>將轉碼結果依據下列註解樣板編入 <code>index.html</code>：</p>
     <div class="code-block">
 <span class="comment-tag">&lt;!--〔 Edit data 〕Bookmark 2026/03/08 @ GitHub --&gt;</span>
-<span class="comment-tag">&lt;!--〔 GitHub API key 〕ghp_xxxx (明文暫存，轉碼後務必移除) --&gt;</span>
+<span class="comment-tag">&lt;!--〔 GitHub API key 〕ghp_xxxx (轉碼完成後請務必刪除此行) --&gt;</span>
 <span class="comment-tag">&lt;!--〔 程序名稱 〕btoa("ghp_xxxx") : Base64 編碼程序 --&gt;</span>
-<span class="comment-tag">&lt;!--〔 GitHub API key base64 code 〕WjJocF... (轉碼後的成果) --&gt;</span></div>
-    
+<span class="comment-tag">&lt;!--〔 GitHub API key base64 code 〕WjJocF... --&gt;</span>
 
-    <h2 id="sec3">4. Token 碎裂化技術</h2>
-    <p>將 <code>btoa()</code> 得到的編碼結果拆成三段變數。這樣做能讓 GitHub 的自動掃描機制失效，保護你的 API Token 永不被停用。</p>
-    <div class="code-block">
-const k_p1 = "WjJocF"; // 第一段
-const k_p2 = "0ZW50"; // 第二段
-const k_p3 = "...=="; // 第三段</div>
+<span class="comment-tag">// 碎裂化存放範例</span>
+const k_p1 = "WjJocF"; 
+const k_p2 = "0ZW50"; 
+const k_p3 = "...=="; </div>
 
-    <h2 id="sec4">5. 全域透明 UI 邏輯</h2>
-    <p>為了解決內容注入後的背景漏白問題，請在 <code>index.html</code> 加入以下 CSS 修補：</p>
+    <h2 id="sec4">5. 全域透明 UI 修補</h2>
+    <p>解決內容注入後的下拉漏白問題：</p>
     <div class="code-block">
 html, body, #content-main {
     background-color: transparent !important;
 }</div>
-    <p>這能確保不論內容多長，背景圖都能維持 <code>fixed</code> 效果，達到最完美的視覺呈現。</p>
 
-    <h2 id="sec5">6. Session 持久化恢復機制</h2>
-    <p>透過 <code>sessionStorage</code> 暫存解鎖內容。只要分頁不關閉，使用者重新整理 (F5) 就不需要重複輸入密碼，體驗與一般網頁無異。</p>
+    <h2 id="sec5">6. Session 恢復機制</h2>
+    <p>利用 <code>sessionStorage</code>。讓使用者在重新整理 (F5) 時能瞬間恢復解鎖狀態，無需重打密碼。</p>
 
     <footer>
-        &copy; 2026 GitHub Pages 安全建置指南 | 追求極致的無痛建置
+        &copy; 2026 GitHub Pages 安全建置指南 | 您私人金庫的最佳實踐
     </footer>
 </main>
 

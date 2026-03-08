@@ -111,24 +111,31 @@
 
     // 核心顯示函數：修正白色背景殘留
     function showContent(html) {
-        // 關鍵：將整個 Body 背景清空，確保 source.html 的背景能顯示
-        document.body.style.backgroundColor = "transparent";
-        
-        // 徹底隱藏登入介面
-        document.getElementById('login-ui').style.display = "none";
-        
-        const main = document.getElementById('content-main');
-        main.style.display = "block";
-        main.innerHTML = html;
+    // 1. 強制讓最外層 body 接手背景設定 (維持您原始的語法效果)
+    // 請將 'background/您的檔名.jpg' 替換為實際圖片路徑
+    document.body.style.backgroundImage = "url('background/繡球花.jpg')"; 
+    document.body.style.backgroundAttachment = "fixed"; // 背景固定不動
+    document.body.style.backgroundSize = "cover";       // 強制填滿視窗
+    document.body.style.backgroundPosition = "center";
+    document.body.style.backgroundColor = "transparent"; // 移除原本的白色
 
-        // 重新執行注入內容中的 Script
-        main.querySelectorAll('script').forEach(oldScript => {
-            const newScript = document.createElement('script');
-            Array.from(oldScript.attributes).forEach(attr => newScript.setAttribute(attr.name, attr.value));
-            newScript.appendChild(document.createTextNode(oldScript.innerHTML));
-            oldScript.parentNode.replaceChild(newScript, oldScript);
-        });
-    }
+    // 2. 徹底隱藏登入介面
+    document.getElementById('login-ui').style.display = "none";
+    
+    // 3. 注入書籤內容並顯示
+    const main = document.getElementById('content-main');
+    main.style.display = "block";
+    main.style.backgroundColor = "transparent"; // 確保容器不遮擋背景
+    main.innerHTML = html;
+
+    // 重新執行 script (維持選單功能)
+    main.querySelectorAll('script').forEach(oldScript => {
+        const newScript = document.createElement('script');
+        Array.from(oldScript.attributes).forEach(attr => newScript.setAttribute(attr.name, attr.value));
+        newScript.appendChild(document.createTextNode(oldScript.innerHTML));
+        oldScript.parentNode.replaceChild(newScript, oldScript);
+    });
+}
 
     async function fetchFromVault(file) {
         const url = `https://api.github.com/repos/${CFG.user}/${CFG.repo}/contents/${file}`;

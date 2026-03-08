@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>江子翠天氣小工具</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: transparent;
+            font-family: Arial, sans-serif;
+            overflow: hidden;
+        }
+        .widget {
+            width: 360px;
+            padding: 20px;
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.0);
+            backdrop-filter: blur(10px);
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: white;
+            transition: 0.5s ease-in-out;
+            position: relative;
+            z-index: 2;
+        }
+        .top-info {
+            text-align: center;
+            margin-bottom: 0px;
+        }
+        .top-info h2 {
+            font-size: 32px; /* 地名字體大小 */
+            margin: 0;
+        }
+        .top-info p {
+            font-size: 24px; /* 時間字體大小 */
+            margin: 0px 0;
+        }
+        .weather-content {
+            display: flex;
+            align-items: center;
+            width: 100%;
+        }
+        .weather-icon {
+            width: 200px; /* 氣象圖示放大2倍 */
+            height: auto;
+            animation: fadeIn 1.5s;
+            margin-right: 5px;
+        }
+        .weather-info {
+            flex-grow: 1;
+            text-align: left;
+        }
+        .weather-info p {
+  white-space: nowrap;
+            font-size: 20px; /* 氣象資訊字體大小 */
+            margin: 0px 0;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.8); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        /* 雨滴動畫 */
+        .rain {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+            display: none;
+        }
+        .raindrop {
+            position: absolute;
+            width: 2px;
+            height: 15px;
+            background: rgba(255, 255, 255, 0.6);
+            animation: raindrop-fall linear infinite;
+        }
+        @keyframes raindrop-fall {
+            from { transform: translateY(-100vh); }
+            to { transform: translateY(100vh); }
+        }
+        /* 閃電動畫 */
+        .lightning {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.8);
+            opacity: 0;
+            z-index: 0;
+            pointer-events: none;
+            animation: lightning-flash infinite;
+        }
+        @keyframes lightning-flash {
+            0% { opacity: 0; }
+            90% { opacity: 0; }
+            92% { opacity: 1; }
+            95% { opacity: 0; }
+            98% { opacity: 1; }
+            100% { opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+    <div class="widget">
+        <div class="top-info">
+            <h2 id="city">載入中...</h2>
+            <p id="time">YYYY-MM-DD HH:MM:SS</p>
+        </div>
+        <div class="weather-content">
+            <img id="weather-icon" class="weather-icon" src="" alt="天氣圖示">
+            <div class="weather-info">
+                <p id="temperature">氣溫：-- °C</p>
+                <p id="humidity">濕度：-- %</p>
+                <p id="rain-chance">降雨機率：-- %</p>
+                <p id="wind-speed">風速：-- m/s</p>
+                <p id="description">--</p>
+            </div>
+        </div>
+    </div>
+    <div class="rain"></div>
+    <div class="lightning"></div>
+
+    <script>
+        const apiKey = "c57e816dae44addfd627e3ce55d9477d";
+        const lat = 25.0263;  // 板橋區江子翠的緯度
+        const lon = 121.5035; // 板橋區江子翠的經度
+
+        function updateTime() {
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            document.getElementById("time").innerText = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+        }
+        setInterval(updateTime, 1000);
+        updateTime();
+
+        function getWeather() {
+            fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${apiKey}&units=metric&lang=zh_tw`)
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById("city").innerText = "港仔嘴";
+                    document.getElementById("temperature").innerText = `氣溫：${data.main.temp} °C`;
+                    document.getElementById("humidity").innerText = `濕度：${data.main.humidity} %`;
+                    document.getElementById("wind-speed").innerText = `風速：${data.wind.speed} m/s`;
+                    document.getElementById("description").innerText = data.weather[0].description;
+                    document.getElementById("weather-icon").src = `https://openweathermap.org/img/wn/${data.weather[0].icon}@2x.png`;
+
+                    // 取得降雨機率
+                    fetch(`https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${apiKey}&units=metric&lang=zh_tw`)
+                        .then(response => response.json())
+                        .then(forecastData => {
+                            const rainChance = forecastData.list[0].pop * 100;
+                            document.getElementById("rain-chance").innerHTML = `降雨機率：${rainChance.toFixed(0)}&nbsp;%`;
+                        });
+                })
+                .catch(error => console.error("天氣資料獲取失敗:", error));
+        }
+
+        getWeather();
+        setInterval(getWeather, 60000);
+    </script>
+</body>
+</html>

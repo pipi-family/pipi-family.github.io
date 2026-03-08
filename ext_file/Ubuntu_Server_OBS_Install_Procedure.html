@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="zh-Hant" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>互動式 Ubuntu Server + OBS 安裝指南</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Inter', 'Noto Sans TC', sans-serif;
+            background-color: #f8fafc; /* slate-50 */
+        }
+        .code-block {
+            background-color: #1e293b; /* slate-800 */
+            color: #e2e8f0; /* slate-200 */
+            border-radius: 0.5rem;
+            padding: 1rem;
+            position: relative;
+            overflow-x: auto;
+        }
+        .copy-btn {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            background-color: #334155; /* slate-700 */
+            color: #cbd5e1; /* slate-300 */
+            border: none;
+            padding: 0.25rem 0.75rem;
+            border-radius: 0.375rem;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .copy-btn:hover {
+            background-color: #475569; /* slate-600 */
+        }
+        .nav-link.active {
+            background-color: #e0f2fe; /* sky-100 */
+            color: #0c4a6e; /* sky-900 */
+            font-weight: 600;
+        }
+        .step-icon {
+            width: 2.5rem;
+            height: 2.5rem;
+            border-radius: 9999px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #f0f9ff; /* sky-50 */
+            color: #0369a1; /* sky-700 */
+            border: 2px solid #bae6fd; /* sky-200 */
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+    </style>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Noto+Sans+TC:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body class="text-slate-700">
+
+    <div class="flex min-h-screen">
+        <aside class="w-64 flex-shrink-0 bg-white border-r border-slate-200 p-4 sticky top-0 h-screen hidden md:block">
+            <h1 class="text-sky-800 font-bold text-xl mb-6">安裝導覽</h1>
+            <nav id="nav-menu" class="space-y-2">
+                <a href="#intro" class="nav-link block px-4 py-2 rounded-lg transition-colors duration-200 hover:bg-slate-100">指南介紹</a>
+                <a href="#part1" class="nav-link block px-4 py-2 rounded-lg transition-colors duration-200 hover:bg-slate-100">第一部分：基礎安裝</a>
+                <a href="#part2" class="nav-link block px-4 py-2 rounded-lg transition-colors duration-200 hover:bg-slate-100">第二部分：軟體安裝</a>
+                <a href="#part3" class="nav-link block px-4 py-2 rounded-lg transition-colors duration-200 hover:bg-slate-100">第三部分：系統設定</a>
+                <a href="#part4" class="nav-link block px-4 py-2 rounded-lg transition-colors duration-200 hover:bg-slate-100">第四部分：功能驗證</a>
+                <a href="#appendix-repair" class="nav-link block px-4 py-2 rounded-lg transition-colors duration-200 hover:bg-slate-100">附錄：KDE 修復</a>
+            </nav>
+        </aside>
+
+        <main class="flex-1 p-4 sm:p-6 md:p-10">
+            <div class="max-w-4xl mx-auto">
+                <section id="intro" class="mb-16 scroll-mt-20">
+                    <h1 class="text-4xl font-bold text-slate-900 mb-4">Ubuntu Server + OBS 互動式安裝指南</h1>
+                    <p class="text-lg text-slate-600 mb-8">本指南將引導您完成從 Ubuntu Server 24.04 LTS 基礎設定到高效能影音工作站的全部流程。請依序跟隨步驟操作，並利用右側的複製按鈕來簡化指令輸入。</p>
+                    
+                    <div class="bg-white p-6 rounded-xl border border-slate-200">
+                        <h3 class="text-xl font-bold text-slate-800 mb-4">目標硬體環境</h3>
+                        <ul class="space-y-3">
+                            <li class="flex items-center"><span class="w-8 h-8 mr-3 inline-flex items-center justify-center rounded-full bg-sky-100 text-sky-700">🖥️</span><div><strong>CPU:</strong> Intel D-1581 (16C/32T)</div></li>
+                            <li class="flex items-center"><span class="w-8 h-8 mr-3 inline-flex items-center justify-center rounded-full bg-sky-100 text-sky-700">🧠</span><div><strong>RAM:</strong> 32GB</div></li>
+                            <li class="flex items-center"><span class="w-8 h-8 mr-3 inline-flex items-center justify-center rounded-full bg-sky-100 text-sky-700">🎮</span><div><strong>VGA:</strong> NVIDIA RTX 4070M 8GB</div></li>
+                            <li class="flex items-center"><span class="w-8 h-8 mr-3 inline-flex items-center justify-center rounded-full bg-sky-100 text-sky-700">💽</span><div><strong>SSD:</strong> 256GB (系統) + 512GB (資料, NTFS)</div></li>
+                        </ul>
+                    </div>
+                </section>
+
+                <section id="part1" class="mb-16 scroll-mt-20">
+                    <h2 class="text-3xl font-bold text-slate-900 border-b-4 border-sky-300 pb-2 mb-8">第一部分：系統基礎安裝與 KDE 桌面</h2>
+                    <p class="text-slate-600 mb-8">此部分將完成系統的基礎設定，包括更新套件庫及安裝 KDE Plasma 圖形使用者介面。這為後續的軟體安裝提供了必要的視覺化操作環境。</p>
+                    <div class="space-y-8">
+                        <div class="flex">
+                            <div class="step-icon mr-4 mt-1">1</div>
+                            <div class="flex-1 bg-white p-6 rounded-xl border border-slate-200">
+                                <h3 class="text-lg font-semibold mb-2">更新系統套件</h3>
+                                <p class="mb-4 text-slate-600">登入伺服器後，首先執行此指令以確保所有軟體套件均為最新版本。</p>
+                                <div class="code-block">
+                                    <button class="copy-btn">複製</button>
+                                    <code>sudo apt update && sudo apt full-upgrade -y</code>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex">
+                            <div class="step-icon mr-4 mt-1">2</div>
+                            <div class="flex-1 bg-white p-6 rounded-xl border border-slate-200">
+                                <h3 class="text-lg font-semibold mb-2">安裝 KDE Plasma 桌面環境</h3>
+                                <p class="mb-4 text-slate-600">安裝 KDE Plasma 作為圖形介面。安裝過程中若提示選擇顯示管理器，請選擇 `sddm`。</p>
+                                <div class="code-block">
+                                    <button class="copy-btn">複製</button>
+                                    <code>sudo apt install kde-plasma-desktop -y</code>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex">
+                            <div class="step-icon mr-4 mt-1">3</div>
+                            <div class="flex-1 bg-white p-6 rounded-xl border border-slate-200">
+                                <h3 class="text-lg font-semibold mb-2">設定開機進入圖形介面並重啟</h3>
+                                <p class="mb-4 text-slate-600">設定系統預設開機啟動圖形介面，然後重啟伺服器使設定生效。</p>
+                                <div class="code-block">
+                                    <button class="copy-btn">複製</button>
+                                    <code>sudo systemctl set-default graphical.target<br>sudo reboot</code>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="part2" class="mb-16 scroll-mt-20">
+                    <h2 class="text-3xl font-bold text-slate-900 border-b-4 border-sky-300 pb-2 mb-8">第二部分：驅動與核心軟體安裝</h2>
+                    <p class="text-slate-600 mb-8">本節專注於安裝關鍵軟體，包括 NVIDIA 驅動、Chrome 瀏覽器、遠端桌面、FFMPEG、網路測速工具 iperf3 以及主角 OBS Studio。</p>
+                    <div class="space-y-8">
+                        <div class="flex">
+                            <div class="step-icon mr-4 mt-1">1</div>
+                            <div class="flex-1 bg-white p-6 rounded-xl border border-slate-200">
+                                <h3 class="text-lg font-semibold mb-2">安裝 NVIDIA 驅動程式</h3>
+                                <p class="mb-4 text-slate-600">自動偵測並安裝最適合您 RTX 4070M 的驅動程式。安裝後務必重啟。</p>
+                                <div class="code-block">
+                                    <button class="copy-btn">複製</button>
+                                    <code>sudo ubuntu-drivers autoinstall<br>sudo reboot</code>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex">
+                            <div class="step-icon mr-4 mt-1">2</div>
+                            <div class="flex-1 bg-white p-6 rounded-xl border border-slate-200">
+                                <h3 class="text-lg font-semibold mb-2">安裝 Google Chrome</h3>
+                                <p class="mb-4 text-slate-600">移除預設的 Firefox，並下載安裝 Google Chrome。</p>
+                                <div class="code-block">
+                                    <button class="copy-btn">複製</button>
+                                    <code>sudo apt purge firefox -y<br>cd ~/Downloads<br>wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb<br>sudo apt install ./google-chrome-stable_current_amd64.deb -y</code>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="flex">
+                            <div class="step-icon mr-4 mt-1">3</div>
+                            <div class="flex-1 bg-white p-6 rounded-xl border border-slate-200">
+                                <h3 class="text-lg font-semibold mb-2">安裝與除錯 Chrome Remote Desktop (KDE 環境)</h3>
+                                <p class="mb-4 text-slate-600">此程序將引導您完成在 KDE 環境下的安裝，並包含解決常見連線問題的除錯步驟。</p>
+
+                                <div class="border-t border-slate-200 mt-6 pt-4">
+                                    <h4 class="font-semibold text-sky-700 mb-3">A 部分：標準安裝程序</h4>
+                                    <ol class="list-decimal list-inside space-y-4 text-slate-600">
+                                        <li>
+                                            <p>下載並安裝 Chrome Remote Desktop 套件。</p>
+                                            <div class="code-block mt-2">
+                                                <button class="copy-btn">複製</button>
+                                                <code>cd ~/Downloads<br>wget https://dl.google.com/linux/direct/chrome-remote-desktop_current_amd64.deb<br>sudo apt install ./chrome-remote-desktop_current_amd64.deb -y</code>
+                                            </div>
+                                        </li>
+                                        <li>
+                                            前往 <a href="https://remotedesktop.google.com/headless" target="_blank" class="text-sky-600 hover:underline font-semibold">Chrome 遠端桌面無頭設定頁面</a>，登入您的 Google 帳號，點擊「開始」並授權。網站會產生一段 Debian/Linux 的授權指令，請將其複製。
+                                        </li>
+                                        <li>
+                                            回到您的 Ubuntu 伺服器終端機，貼上並執行上一步複製的指令。過程中會要求您設定一個 6 位數以上的 PIN 碼。
+                                        </li>
+                                        <li>
+                                            <p>建立一個設定檔，告知遠端桌面服務要啟動 KDE Plasma 工作階段。</p>
+                                            <div class="code-block mt-2">
+                                                <button class="copy-btn">複製</button>
+                                                <code>sudo bash -c 'echo "exec /usr/bin/startplasma-x11" > /etc/chrome-remote-desktop-session'</code>
+                                            </div>
+                                        </li>
+                                        <li>
+                                            <p>重啟電腦並嘗試從另一台裝置連線。如果可以正常看到您的 KDE 桌面，則設定完成！如果遇到黑畫面，請繼續執行 B 部分的除錯程序。</p>
+                                            <div class="code-block mt-2">
+                                                <button class="copy-btn">複製</button>
+                                                <code>sudo reboot</code>
+                                            </div>
+                                        </li>
+                                    </ol>
+                                </div>
+
+                                <div class="border-t border-amber-300 mt-6 pt-4">
+                                    <h4 class="font-semibold text-amber-800 mb-3">B 部分：後續除錯處理 (黑畫面或無法分享螢幕)</h4>
+                                    <p class="mb-4 text-slate-600">如果您連線後只看到黑畫面或空白桌面，代表遠端桌面服務未能連接到您已登入的實體桌面。請執行以下步驟強制其連接。</p>
+                                    <ol class="list-decimal list-inside space-y-4 text-slate-600">
+                                        <li>
+                                            <p>停用系統層級的預設服務。</p>
+                                            <div class="code-block mt-2">
+                                                <button class="copy-btn">複製</button>
+                                                <code>sudo systemctl disable chrome-remote-desktop.service</code>
+                                            </div>
+                                        </li>
+                                        <li>
+                                            <p>為您的使用者建立一個新的服務設定檔。首先建立目錄：</p>
+                                            <div class="code-block mt-2">
+                                                <button class="copy-btn">複製</button>
+                                                <code>mkdir -p ~/.config/systemd/user</code>
+                                            </div>
+                                            <p class="mt-2">然後建立並編輯服務檔案：</p>
+                                            <div class="code-block mt-2">
+                                                <button class="copy-btn">複製</button>
+                                                <code>nano ~/.config/systemd/user/chrome-remote-desktop.service</code>
+                                            </div>
+                                        </li>
+                                        <li>
+                                            <p>將以下所有內容<strong class="text-amber-800">完整地</strong>貼入該檔案中並儲存。</p>
+                                            <div class="code-block mt-2">
+                                                <button class="copy-btn">複製</button>
+                                                <code>[Unit]<br>Description=Chrome Remote Desktop host daemon<br><br>[Service]<br>Type=forking<br>ExecStart=/opt/google/chrome-remote-desktop/chrome-remote-desktop --start<br>ExecStop=/opt/google/chrome-remote-desktop/chrome-remote-desktop --stop<br><br>[Install]<br>WantedBy=default.target</code>
+                                            </div>
+                                        </li>
+                                        <li>
+                                            <p>重新載入 systemd 並啟用、啟動新的<strong class="text-amber-800">使用者</strong>服務。</p>
+                                            <div class="code-block mt-2">
+                                                <button class="copy-btn">複製</button>
+                                                <code>systemctl --user daemon-reload<br>systemctl --user enable --now chrome-remote-desktop.service</code>
+                                            </div>
+                                        </li>
+                                         <li>
+                                            <p>再次重啟電腦，除錯程序即完成。現在應該可以正常連線到您的桌面了。</p>
+                                            <div class="code-block mt-2">
+                                                <button class="copy-btn">複製</button>
+                                                <code>sudo reboot</code>
+                                            </div>
+                                        </li>
+                                    </ol>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex">
+                            <div class="step-icon mr-4 mt-1">4</div>
+                            <div class="flex-1 bg-white p-6 rounded-xl border border-slate-200">
+                                <h3 class="text-lg font-semibold mb-2">安裝 FFMPEG</h3>
+                                <p class="mb-4 text-slate-600">安裝 FFMPEG，這是 OBS 進行影音處理所需的重要工具。</p>
+                                <div class="code-block">
+                                    <button class="copy-btn">複製</button>
+                                    <code>sudo apt install ffmpeg -y</code>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex">
+                            <div class="step-icon mr-4 mt-1">5</div>
+                            <div class="flex-1 bg-white p-6 rounded-xl border border-slate-200">
+                                <h3 class="text-lg font-semibold mb-2">安裝 iperf3</h3>
+                                <p class="mb-4 text-slate-600">安裝 iperf3，一個強大的網路效能測試工具。</p>
+                                <div class="code-block">
+                                    <button class="copy-btn">複製</button>
+                                    <code>sudo apt install iperf3 -y</code>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex">
+                            <div class="step-icon mr-4 mt-1">6</div>
+                            <div class="flex-1 bg-white p-6 rounded-xl border border-slate-200">
+                                <h3 class="text-lg font-semibold mb-2">安裝 OBS Studio</h3>
+                                <p class="mb-4 text-slate-600">透過官方 PPA 安裝最新版本的 OBS Studio。</p>
+                                <div class="code-block">
+                                    <button class="copy-btn">複製</button>
+                                    <code>sudo add-apt-repository ppa:obsproject/obs-studio -y<br>sudo apt update<br>sudo apt install obs-studio -y</code>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="part3" class="mb-16 scroll-mt-20">
+                    <h2 class="text-3xl font-bold text-slate-900 border-b-4 border-sky-300 pb-2 mb-8">第三部分：系統客製化設定</h2>
+                    <p class="text-slate-600 mb-8">此部分進行重要的自動化與個人化設定：自動掛載資料碟、設定自動登入，以及安裝與設定中文注音輸入法。</p>
+                    <div class="space-y-8">
+                        <div class="flex">
+                            <div class="step-icon mr-4 mt-1">1</div>
+                            <div class="flex-1 bg-white p-6 rounded-xl border border-slate-200">
+                                <h3 class="text-lg font-semibold mb-2">設定 512GB NTFS 硬碟開機自動掛載</h3>
+                                <p class="mb-4 text-slate-600">首先安裝 NTFS 工具，接著找到硬碟的 UUID，最後編輯 `/etc/fstab` 檔案來完成自動掛載設定。</p>
+                                <p class="mb-2 text-slate-600">1. 安裝工具:</p>
+                                <div class="code-block mb-4">
+                                    <button class="copy-btn">複製</button>
+                                    <code>sudo apt install ntfs-3g -y</code>
+                                </div>
+                                <p class="mb-2 text-slate-600">2. 尋找 UUID (找到 512GB 硬碟並複製其 UUID):</p>
+                                <div class="code-block mb-4">
+                                    <button class="copy-btn">複製</button>
+                                    <code>sudo blkid</code>
+                                </div>
+                                <p class="mb-2 text-slate-600">3. 建立掛載點並編輯 fstab:</p>
+                                <div class="code-block mb-4">
+                                    <button class="copy-btn">複製</button>
+                                    <code>sudo mkdir /mnt/store<br>sudo nano /etc/fstab</code>
+                                </div>
+                                <p class="mb-2 text-slate-600">4. 在 fstab 檔案最下方加入此行 (替換 `<YOUR_UUID>`):</p>
+                                <div class="code-block mb-4">
+                                    <button class="copy-btn">複製</button>
+                                    <code>UUID=&lt;YOUR_UUID&gt; /mnt/store ntfs-3g defaults,permissions,uid=1000,gid=1000 0 0</code>
+                                </div>
+                                <p class="mb-2 text-slate-600">5. 測試掛載:</p>
+                                <div class="code-block">
+                                    <button class="copy-btn">複製</button>
+                                    <code>sudo mount -a</code>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex">
+                            <div class="step-icon mr-4 mt-1">2</div>
+                            <div class="flex-1 bg-white p-6 rounded-xl border border-slate-200">
+                                <h3 class="text-lg font-semibold mb-2">設定系統自動登入</h3>
+                                <p class="mb-4 text-slate-600">建立 SDDM 設定檔以實現開機後自動登入桌面。</p>
+                                <p class="mb-2 text-slate-600">1. 建立並編輯設定檔:</p>
+                                <div class="code-block mb-4">
+                                    <button class="copy-btn">複製</button>
+                                    <code>sudo nano /etc/sddm.conf.d/autologin.conf</code>
+                                </div>
+                                <p class="mb-2 text-slate-600">2. 在檔案中貼上以下內容 (替換 `<your_username>`):</p>
+                                <div class="code-block">
+                                    <button class="copy-btn">複製</button>
+                                    <code>[Autologin]<br>User=&lt;your_username&gt;<br>Session=plasma.desktop</code>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex">
+                            <div class="step-icon mr-4 mt-1">3</div>
+                            <div class="flex-1 bg-white p-6 rounded-xl border border-slate-200">
+                                <h3 class="text-lg font-semibold mb-2">安裝與設定注音輸入法 (Fcitx5)</h3>
+                                <p class="mb-4 text-slate-600">安裝 Fcitx5 輸入法框架與新酷音(Chewing)注音引擎，並設定環境變數。</p>
+                                <p class="mb-2 text-slate-600">1. 安裝 Fcitx5 與新酷音:</p>
+                                <div class="code-block mb-4">
+                                    <button class="copy-btn">複製</button>
+                                    <code>sudo apt install fcitx5 fcitx5-chewing -y</code>
+                                </div>
+                                <p class="mb-2 text-slate-600">2. 設定全域環境變數:</p>
+                                <div class="code-block mb-4">
+                                    <button class="copy-btn">複製</button>
+                                    <code>sudo nano /etc/environment</code>
+                                </div>
+                                <p class="mb-2 text-slate-600">3. 在檔案中加入以下三行:</p>
+                                <div class="code-block mb-4">
+                                    <button class="copy-btn">複製</button>
+                                    <code>GTK_IM_MODULE=fcitx<br>QT_IM_MODULE=fcitx<br>XMODIFIERS=@im=fcitx</code>
+                                </div>
+                                <p class="mb-2 text-slate-600">4. <strong>重啟電腦</strong>讓所有設定生效。重啟後，前往 KDE「系統設定」→「區域設定」→「輸入法」，點擊「新增輸入法...」，找到並加入「新酷音」。您可以使用 `Ctrl + Space` 來切換輸入法。</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="part4" class="mb-16 scroll-mt-20">
+                    <h2 class="text-3xl font-bold text-slate-900 border-b-4 border-sky-300 pb-2 mb-8">第四部分：功能驗證</h2>
+                    <p class="text-slate-600 mb-8">最後一步！完成所有設定後，重啟您的伺服器，並依照下列清單逐一確認所有功能是否正常運作。這是確保您的影音工作站已準備就緒的關鍵步驟。</p>
+                    <div class="bg-white p-6 rounded-xl border border-slate-200">
+                        <ul class="space-y-6">
+                            <li class="flex items-start">
+                                <span class="w-8 h-8 mr-4 mt-1 inline-flex items-center justify-center rounded-full bg-green-100 text-green-700 font-bold">✓</span>
+                                <div>
+                                    <h4 class="font-semibold text-lg">驗證 Chrome Remote Desktop</h4>
+                                    <p class="text-slate-600">在另一台電腦上，透過 Chrome 瀏覽器登入遠端桌面，確認可以連線並看到伺服器的 KDE 桌面（而不是黑畫面）。</p>
+                                </div>
+                            </li>
+                            <li class="flex items-start">
+                                <span class="w-8 h-8 mr-4 mt-1 inline-flex items-center justify-center rounded-full bg-green-100 text-green-700 font-bold">✓</span>
+                                <div>
+                                    <h4 class="font-semibold text-lg">驗證 NVIDIA 驅動</h4>
+                                    <p class="text-slate-600 mb-2">在伺服器終端機執行以下指令：</p>
+                                    <div class="code-block">
+                                        <button class="copy-btn">複製</button>
+                                        <code>nvidia-smi</code>
+                                    </div>
+                                    <p class="text-slate-600 mt-2">應顯示 RTX 4070M 的詳細資訊。</p>
+                                </div>
+                            </li>
+                            <li class="flex items-start">
+                                <span class="w-8 h-8 mr-4 mt-1 inline-flex items-center justify-center rounded-full bg-green-100 text-green-700 font-bold">✓</span>
+                                <div>
+                                    <h4 class="font-semibold text-lg">驗證 FFMPEG 硬體編碼</h4>
+                                    <p class="text-slate-600 mb-2">執行以下指令檢查 NVENC 是否可用：</p>
+                                    <div class="code-block">
+                                        <button class="copy-btn">複製</button>
+                                        <code>ffmpeg -codecs | grep nvenc</code>
+                                    </div>
+                                    <p class="text-slate-600 mt-2">應看到 `h264_nvenc` 和 `hevc_nvenc`。</p>
+                                </div>
+                            </li>
+                             <li class="flex items-start">
+                                <span class="w-8 h-8 mr-4 mt-1 inline-flex items-center justify-center rounded-full bg-green-100 text-green-700 font-bold">✓</span>
+                                <div>
+                                    <h4 class="font-semibold text-lg">驗證注音輸入法</h4>
+                                    <p class="text-slate-600">在任何文字輸入框中，按下 `Ctrl + Space`，確認可以切換並使用注音輸入法。</p>
+                                </div>
+                            </li>
+                            <li class="flex items-start">
+                                <span class="w-8 h-8 mr-4 mt-1 inline-flex items-center justify-center rounded-full bg-green-100 text-green-700 font-bold">✓</span>
+                                <div>
+                                    <h4 class="font-semibold text-lg">驗證 OBS 硬體編碼</h4>
+                                    <p class="text-slate-600">打開 OBS → 設定 → 輸出 → 輸出模式(進階)。在「編碼器」下拉選單中，確認可以看到 "NVIDIA NVENC H.264" 和 "NVIDIA NVENC HEVC" 選項。</p>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </section>
+                
+                <section id="appendix-repair" class="mb-16 scroll-mt-20">
+                    <h2 class="text-3xl font-bold text-slate-900 border-b-4 border-amber-300 pb-2 mb-8">附錄：KDE GUI 故障排除與修復</h2>
+                    <p class="text-slate-600 mb-8">如果您在安裝或重啟後遇到<strong class="text-amber-800">黑畫面、登入循環、或桌面無法正常載入</strong>等問題，可以嘗試以下步驟來修復您的 KDE 桌面環境。建議從遠端 SSH 或在實體機上切換到 TTY (Ctrl+Alt+F3) 來執行這些指令。</p>
+                    <div class="space-y-8">
+                        <div class="flex">
+                            <div class="step-icon mr-4 mt-1 bg-amber-100 text-amber-700 border-amber-300">1</div>
+                            <div class="flex-1 bg-white p-6 rounded-xl border border-slate-200">
+                                <h3 class="text-lg font-semibold mb-2">完整重新安裝 KDE Plasma</h3>
+                                <p class="mb-4 text-slate-600">這是最直接的修復方法，可以解決因套件缺失或檔案損毀導致的問題。</p>
+                                <div class="code-block">
+                                    <button class="copy-btn">複製</button>
+                                    <code>sudo apt update && sudo apt install --reinstall kde-plasma-desktop</code>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex">
+                            <div class="step-icon mr-4 mt-1 bg-amber-100 text-amber-700 border-amber-300">2</div>
+                            <div class="flex-1 bg-white p-6 rounded-xl border border-slate-200">
+                                <h3 class="text-lg font-semibold mb-2">重新設定顯示管理器 (SDDM)</h3>
+                                <p class="mb-4 text-slate-600">顯示管理器負責處理登入畫面。重新設定它可以解決登入相關的問題。</p>
+                                <div class="code-block">
+                                    <button class="copy-btn">複製</button>
+                                    <code>sudo dpkg-reconfigure sddm</code>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex">
+                            <div class="step-icon mr-4 mt-1 bg-amber-100 text-amber-700 border-amber-300">3</div>
+                            <div class="flex-1 bg-white p-6 rounded-xl border border-slate-200">
+                                <h3 class="text-lg font-semibold mb-2">確認開機目標為圖形介面</h3>
+                                <p class="mb-4 text-slate-600">確保系統設定為開機後啟動圖形介面，而不是僅停留在命令列模式。</p>
+                                <div class="code-block">
+                                    <button class="copy-btn">複製</button>
+                                    <code>sudo systemctl set-default graphical.target</code>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex">
+                            <div class="step-icon mr-4 mt-1 bg-amber-100 text-amber-700 border-amber-300">4</div>
+                            <div class="flex-1 bg-white p-6 rounded-xl border border-slate-200">
+                                <h3 class="text-lg font-semibold mb-2">檢查家目錄權限</h3>
+                                <p class="mb-4 text-slate-600">錯誤的檔案權限有時會阻止桌面環境正常啟動。此指令會將您家目錄下所有檔案的擁有者設定回您目前的使用者。</p>
+                                <div class="code-block">
+                                    <button class="copy-btn">複製</button>
+                                    <code>sudo chown -R $(whoami):$(whoami) $HOME</code>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex">
+                            <div class="step-icon mr-4 mt-1 bg-amber-100 text-amber-700 border-amber-300">5</div>
+                            <div class="flex-1 bg-white p-6 rounded-xl border border-slate-200">
+                                <h3 class="text-lg font-semibold mb-2">最後步驟：重啟電腦</h3>
+                                <p class="mb-4 text-slate-600">完成上述任何修復步驟後，請務必重啟電腦來檢查問題是否已解決。如果問題仍然存在，可能與顯示卡驅動有關，請考慮重新執行<a href="#part2" class="text-sky-600 hover:underline font-semibold">第二部分的驅動安裝步驟</a>。</p>
+                                <div class="code-block">
+                                    <button class="copy-btn">複製</button>
+                                    <code>sudo reboot</code>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    // Copy to clipboard functionality
+    const allCopyButtons = document.querySelectorAll('.copy-btn');
+    allCopyButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            const codeBlock = button.parentElement;
+            const code = codeBlock.querySelector('code').innerText;
+            navigator.clipboard.writeText(code).then(() => {
+                const originalText = button.innerText;
+                button.innerText = '已複製!';
+                button.style.backgroundColor = '#059669'; // green-600
+                setTimeout(() => {
+                    button.innerText = originalText;
+                    button.style.backgroundColor = ''; // Revert to original
+                }, 2000);
+            }).catch(err => {
+                console.error('無法複製文字: ', err);
+            });
+        });
+    });
+
+    // Scrollspy for navigation
+    const sections = document.querySelectorAll('section');
+    const navLinks = document.querySelectorAll('.nav-link');
+
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                navLinks.forEach(link => {
+                    link.classList.remove('active');
+                    if (link.getAttribute('href').substring(1) === entry.target.id) {
+                        link.classList.add('active');
+                    }
+                });
+            }
+        });
+    }, { rootMargin: "-30% 0px -70% 0px" });
+
+    sections.forEach(section => {
+        observer.observe(section);
+    });
+});
+</script>
+
+</body>
+</html>

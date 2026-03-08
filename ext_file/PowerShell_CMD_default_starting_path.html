@@ -1,0 +1,116 @@
+<!DOCTYPE NETSCAPE-Bookmark-file-1>
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=UTF-8">
+<TITLE>將 PowerShell & CMD 預設起始路徑改為 C:\</TITLE>
+<H1>將 PowerShell & CMD 預設起始路徑改為 C:\</H1>
+<STYLE>
+    body, p, li, dt, dd, h3, h4 {
+        font-family: "Segoe UI", "Microsoft JhengHei", sans-serif;
+        font-size: 16px;
+        line-height: 1.6;
+    }
+    h1 {
+        font-size: 24px;
+        color: #333;
+    }
+    h3 {
+        font-size: 20px;
+        color: #0078D4; /* Blue color for section titles */
+        margin-top: 20px;
+        margin-bottom: 10px;
+        border-bottom: 1px solid #eee;
+        padding-bottom: 5px;
+    }
+    h4 {
+        font-size: 18px;
+        color: #555;
+        margin-top: 15px;
+        margin-bottom: 5px;
+    }
+    ul {
+        list-style-type: disc;
+        margin-left: 20px;
+        padding-left: 10px;
+    }
+    li {
+        margin-bottom: 8px;
+    }
+    code {
+        font-family: Consolas, "Courier New", monospace;
+        background-color: #f0f0f0;
+        padding: 3px 6px;
+        border-radius: 4px;
+        font-size: 15px;
+    }
+    .warning {
+        color: #D83B01; /* Orange-red for warnings */
+        font-weight: bold;
+    }
+    .note {
+        font-style: italic;
+        color: #666;
+    }
+    dl {
+        padding-left: 5px;
+    }
+    dt {
+        margin-bottom: 5px; /* Removed excessive margin from DT if it doesn't directly contain H3 */
+    }
+    dt > h3, dt > h4 { /* Ensure headings within DT don't add extra top margin from DT itself */
+        margin-top: 0;
+    }
+</STYLE>
+<DL><p>
+    <DT><H3>🎯 目標：將 PowerShell 與 CMD 的預設開啟路徑設定為 C:\</H3></DT>
+    <hr>
+    <DT><H3>🚀 修改 PowerShell 預設起始路徑</H3>
+        <DL><p>
+            <DT><H4>步驟：</H4>
+                <UL>
+                    <LI>開啟 PowerShell。</LI>
+                    <LI>檢查設定檔是否存在：執行 <code>Test-Path $PROFILE</code></LI>
+                    <LI>如果回應 <code>False</code> (不存在)，則建立設定檔：執行 <code>New-Item -Path $PROFILE -Type File -Force</code></LI>
+                    <LI>開啟設定檔進行編輯：執行 <code>notepad $PROFILE</code></LI>
+                    <LI>在記事本開啟的檔案中，加入以下這一行：<br><code>Set-Location C:\</code></LI>
+                    <LI>儲存檔案並關閉記事本。</LI>
+                    <LI>重新開啟 PowerShell，預設路徑即會變為 C:\。</LI>
+                </UL>
+            </DT>
+            <DT><H4>⚠️ 注意：若遇到「指令碼執行已停用」錯誤</H4>
+                <P class="note">此錯誤 (例如：<code>因為這個系統上已停用指令碼執行，所以無法載入 ... Microsoft.PowerShell_profile.ps1 檔案。</code>) 表示 PowerShell 的執行原則阻止了設定檔的載入。</P>
+                <UL>
+                    <LI><strong>以系統管理員身分</strong>開啟 PowerShell。</LI>
+                    <LI>檢查目前的執行原則：執行 <code>Get-ExecutionPolicy</code></LI>
+                    <LI>設定新的執行原則 (建議選項，僅針對目前使用者)：<br>執行 <code>Set-ExecutionPolicy RemoteSigned -Scope CurrentUser</code><br>出現提示時，輸入 <code>Y</code> 並按 Enter 確認。</LI>
+                    <LI>關閉所有 PowerShell 視窗，然後重新開啟一個正常的 (非系統管理員) PowerShell 視窗。</LI>
+                </UL>
+            </DT>
+        </DL><p></DT>
+    <hr>
+    <DT><H3>💻 修改 CMD (命令提示字元) 預設起始路徑</H3>
+        <DL><p>
+            <DT><H4>方法一：修改登錄檔 <span class="warning">(注意：修改登錄檔有風險，請謹慎操作或先備份)</span></H4>
+                <UL>
+                    <LI>開啟「執行」對話框：按下 <code>Win + R</code> 鍵。</LI>
+                    <LI>輸入 <code>regedit</code> 並按 Enter，開啟登錄編輯程式。若出現使用者帳戶控制提示，請點選「是」。</LI>
+                    <LI>在登錄編輯程式中，導覽至以下路徑：<br><code>HKEY_CURRENT_USER\Software\Microsoft\Command Processor</code></LI>
+                    <LI>在右側窗格中，尋找名為 <code>Autorun</code> 的字串值。
+                        <UL>
+                            <LI>如果 <code>Autorun</code> <strong>不存在</strong>，請在右側窗格空白處按右鍵，選擇「新增」&gt;「字串值」，並將其命名為 <code>Autorun</code>。</LI>
+                        </UL>
+                    </LI>
+                    <LI>按兩下 <code>Autorun</code> 值，在「數值資料」欄位中輸入：<code>cd /d C:\</code></LI>
+                    <LI>點選「確定」並關閉登錄編輯程式。</LI>
+                    <LI>重新開啟 CMD，預設路徑即會變為 C:\。</LI>
+                </UL>
+            </DT>
+            <DT><H4>方法二：修改 CMD 捷徑內容 (僅對該捷徑有效)</H4>
+                <UL>
+                    <LI>找到你平常用來開啟 CMD 的捷徑 (例如桌面捷徑、開始功能表中的捷徑)。</LI>
+                    <LI>在 CMD 捷徑上按一下滑鼠右鍵，選擇「內容」。</LI>
+                    <LI>在「捷徑」分頁中，找到「開始位置(S):」欄位。</LI>
+                    <LI>將該欄位的內容修改為：<code>C:\</code></LI>
+                    <LI>點選「套用」，然後點選「確定」。</LI>
+                </UL>
+            </DT>
+        </DL><p></DT>
+</DL><p>

@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>漸層色地名加時間</title>
+</head>
+<style>
+h1 {
+    background: linear-gradient(to top, #3177fc, #87f6ff, #fcfcfc);
+    background: -webkit-linear-gradient(to top, #3177fc, #87f6ff, #fcfcfc);
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
+}
+
+h1 {
+    font-weight: bold;
+    font-family: Microsoft JhengHei;
+    margin: auto-flow;
+    text-align: center;
+}
+
+body {
+  padding: 10px;
+  margin: auto-flow;
+  overflow: hidden;
+  background-color: transparent;
+  text-align: center;
+  color: transparent;
+  font-family: Microsoft JhengHei;
+  text-shadow: 3px 3px 2px rgba(0,0,0,0.3);
+  font-size: 24px;
+  line-height: 1;
+}
+</style>
+<body>
+<H1><span><p align="left">港仔嘴</span><br /><span id="current_time"></span></p></H1>
+<script>
+setInterval(() => {
+  document.getElementById("current_time").innerHTML = Intl.DateTimeFormat(['sv-SE'], { day: 'numeric', month: 'numeric', year: 'numeric', hour: 'numeric', minute: 'numeric', second: 'numeric' }).format(new Date());
+}, 100);
+</script>
+</body>
+</html>

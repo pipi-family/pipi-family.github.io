@@ -1,0 +1,160 @@
+
+<!DOCTYPE html>
+
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8"/>
+<title>Raspberry Pi 64bit 編譯 Chromium + CRD 教學</title>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<style>
+    body {
+      font-family: "Noto Sans TC", sans-serif;
+      background-color: #f8f9fa;
+      color: #333;
+      padding: 20px;
+      max-width: 900px;
+      margin: auto;
+      line-height: 1.8;
+    }
+    h1, h2 {
+      color: #2c3e50;
+    }
+    code, pre {
+      background-color: #e9ecef;
+      padding: 10px;
+      display: block;
+      border-left: 4px solid #007bff;
+      overflow-x: auto;
+      font-family: monospace;
+    }
+    ul {
+      padding-left: 20px;
+    }
+    a {
+      color: #007bff;
+      text-decoration: none;
+    }
+    nav {
+      background-color: #fff;
+      padding: 10px;
+      border: 1px solid #ccc;
+      margin-bottom: 20px;
+    }
+    nav ul {
+      list-style: none;
+      padding: 0;
+    }
+    nav li {
+      margin-bottom: 5px;
+    }
+  </style>
+<style>
+.copy-btn {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 5px 10px;
+  cursor: pointer;
+  margin-bottom: 5px;
+  border-radius: 5px;
+  font-size: 0.9em;
+}
+.copy-btn:hover {
+  background-color: #0056b3;
+}
+</style></head>
+<body>
+<h1>Raspberry Pi OS 64bit 編譯 Chromium 並支援 Google Remote Desktop 教學</h1>
+<nav>
+<h2>📑 目錄</h2>
+<ul>
+<li><a href="#env">1. 建立編譯環境</a></li>
+<li><a href="#fetch">2. 下載 Chromium 原始碼</a></li>
+<li><a href="#config">3. 設定 GN Build 參數</a></li>
+<li><a href="#build">4. 使用 Ninja 編譯</a></li>
+<li><a href="#crd">5. 安裝 CRD 並自動啟動</a></li>
+<li><a href="#auto">6. 開機自動啟動設定</a></li>
+<li><a href="#fix">7. 常見錯誤排除</a></li>
+</ul>
+</nav>
+<h2 id="env">1. 建立編譯環境</h2>
+<button class="copy-btn" onclick="copyCode(this)">📋 複製指令</button><pre><code>sudo apt update &amp;&amp; sudo apt upgrade -y
+sudo apt install git python3 build-essential pkg-config curl unzip python3-pip python3-venv ninja-build gnupg flex bison gperf cmake libnss3 libxss-dev libxcomposite-dev libxrandr-dev libdrm-dev libgbm-dev
+</code></pre>
+<h2 id="fetch">2. 下載 Chromium 原始碼</h2>
+<button class="copy-btn" onclick="copyCode(this)">📋 複製指令</button><pre><code>mkdir -p ~/chromium_build
+cd ~/chromium_build
+git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git
+export PATH="$PWD/depot_tools:$PATH"
+
+gclient config --name=src https://chromium.googlesource.com/chromium/src.git
+gclient sync --no-history
+</code></pre>
+<h2 id="config">3. 設定 GN Build 參數</h2>
+<button class="copy-btn" onclick="copyCode(this)">📋 複製指令</button><pre><code>cd ~/chromium_build/src
+gn args out/Default</code></pre>
+
+🔧 輸入以下設定（`gn args` 互動畫面）：
+<button class="copy-btn" onclick="copyCode(this)">📋 複製指令</button><pre><code>is_debug=false
+is_component_build=false
+target_cpu="arm64"
+target_os="linux"
+use_sysroot=true
+use_ozone=true
+enable_remoting=true
+enable_me2me_host=true
+enable_remote_desktop=true</code></pre>
+<h2 id="build">4. 使用 Ninja 編譯</h2>
+<button class="copy-btn" onclick="copyCode(this)">📋 複製指令</button><pre><code>gn gen out/Default
+ninja -C out/Default remoting/host:host
+</code></pre>
+
+⏱ 時間預估：視 CPU 與快取情況 4~10 小時以上。
+
+<h2 id="crd">5. 安裝 Google Remote Desktop 並註冊</h2>
+<button class="copy-btn" onclick="copyCode(this)">📋 複製指令</button><pre><code>wget https://dl.google.com/linux/direct/chrome-remote-desktop_current_amd64.deb
+sudo dpkg --add-architecture arm64
+sudo dpkg -i chrome-remote-desktop_current_amd64.deb || sudo apt -f install -y
+</code></pre>
+
+📌 註冊遠端裝置：
+<button class="copy-btn" onclick="copyCode(this)">📋 複製指令</button><pre><code>/opt/google/chrome-remote-desktop/start-host --code="YOUR_AUTH_CODE" --redirect-url="https://remotedesktop.google.com/_/oauthredirect" --name="$(hostname)"
+</code></pre>
+<h2 id="auto">6. 開機自動啟動設定</h2>
+<button class="copy-btn" onclick="copyCode(this)">📋 複製指令</button><pre><code>sudo nano /etc/systemd/system/crd.service</code></pre>
+
+內容如下：
+<button class="copy-btn" onclick="copyCode(this)">📋 複製指令</button><pre><code>[Unit]
+Description=Chrome Remote Desktop
+After=network.target
+
+[Service]
+User=pi
+ExecStart=/opt/google/chrome-remote-desktop/chrome-remote-desktop --start
+Restart=always
+
+[Install]
+WantedBy=multi-user.target</code></pre>
+
+啟用服務：
+<button class="copy-btn" onclick="copyCode(this)">📋 複製指令</button><pre><code>sudo systemctl enable crd
+sudo systemctl start crd
+</code></pre>
+<h2 id="fix">7. 常見錯誤排除</h2>
+<ul>
+<li>🧨 <strong>gclient sync 出錯</strong> → 確認磁碟空間是否足夠 (需 80+ GB)</li>
+<li>🧨 <strong>vpython 錯誤</strong> → 使用 <code>export VPYTHON_BYPASS="manually managed python"</code> 避免</li>
+<li>🧨 <strong>CRD 未顯示</strong> → 請確認 <code>remoting</code> 模組成功編譯</li>
+</ul>
+<hr/>
+<p>🧠 教學維護：<a href="https://chat.openai.com/">ChatGPT PiPi 專屬教學文檔</a> | 最後更新：2025 年 4 月</p>
+<script>
+function copyCode(btn) {
+  const codeBlock = btn.nextElementSibling;
+  navigator.clipboard.writeText(codeBlock.innerText).then(() => {
+    btn.innerText = "✅ 已複製";
+    setTimeout(() => { btn.innerText = "📋 複製指令"; }, 1500);
+  });
+}
+</script></body>
+</html>

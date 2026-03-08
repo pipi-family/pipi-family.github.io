@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ubuntu 24.04 LTS 完整安裝與驗證程序</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+            line-height: 1.6;
+            color: #343a40;
+            background-color: #f8f9fa;
+            margin: 0;
+            padding: 20px;
+            font-size: 16px; /* 根據要求設定基礎字體大小 */
+        }
+        .container {
+            max-width: 850px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 2.5em;
+            box-shadow: 0 6px 12px rgba(0,0,0,0.1);
+        }
+        h1, h2, h3, h4 {
+            color: #2c3e50;
+            border-bottom: 2px solid #e9ecef;
+            padding-bottom: 0.3em;
+            margin-top: 1.8em;
+        }
+        h1 {
+            font-size: 2.2em;
+            text-align: center;
+            border-bottom: none;
+            color: #0056b3;
+        }
+        h2 {
+            font-size: 1.8em;
+        }
+        h3 {
+            font-size: 1.5em;
+        }
+        h4 {
+            font-size: 1.25em;
+            border-bottom: none;
+        }
+        pre {
+            background-color: #282c34;
+            color: #d1d5db;
+            padding: 1.2em;
+            border-radius: 6px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            border: 1px solid #444;
+        }
+        code {
+            font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
+            font-size: 0.95em;
+        }
+        .note {
+            background-color: #e9f7fd;
+            border-left: 5px solid #007bff;
+            padding: 1.2em;
+            margin: 1.5em 0;
+            border-radius: 4px;
+        }
+        .warning {
+            background-color: #fff3cd;
+            border-left: 5px solid #ffc107;
+            padding: 1.2em;
+            margin: 1.5em 0;
+            border-radius: 4px;
+        }
+        .danger {
+            background-color: #f8d7da;
+            border-left: 5px solid #d93025;
+            padding: 1.2em;
+            margin: 1.5em 0;
+            border-radius: 4px;
+        }
+        strong.danger-text {
+            color: #d93025;
+            font-weight: bold;
+        }
+        a {
+            color: #007bff;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+        ul {
+            list-style-type: square;
+            padding-left: 20px;
+        }
+        hr {
+            margin-top: 2.5em;
+            border: 1px solid #eee;
+        }
+        .step {
+            margin-bottom: 2.5em;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Ubuntu 24.04 LTS 完整安裝與驗證程序</h1>
+        <h2>(OBS / 遠端桌面 / NTFS掛載 / 硬體加速)</h2>
+
+        <div class="danger">
+            <p><strong class="danger-text">重大安全警告：</strong></p>
+            <p>本程序包含一個<strong>極不推薦</strong>的步驟：<strong>將鑰匙圈密碼設為空</strong>。這會導致您儲存在系統中的所有密碼（如 Wi-Fi、應用程式登入憑證）失去保護，任何能存取您使用者帳號的程式都能輕易讀取這些密碼。<strong>請務必確認您完全了解並接受此操作帶來的巨大安全風險，僅在完全隔離且受控的測試環境中執行。</strong></p>
+        </div>
+
+        <div class="step">
+            <h3>第一步：系統更新與基礎設定</h3>
+            <p>確保系統為最新狀態，並移除預設的 Firefox Snap 套件。</p>
+            <pre><code># 更新軟體包列表並升級已安裝的套件
+sudo apt update && sudo apt upgrade -y
+
+# 移除 Firefox Snap 套件
+sudo snap remove firefox
+
+# (可選) 移除 Snapd 以統一軟體包管理
+sudo apt purge snapd -y
+sudo apt autoremove -y</code></pre>
+        </div>
+
+        <div class="step">
+            <h3>第二步：安裝 Google Chrome 與遠端桌面</h3>
+            <p>安裝 Google Chrome 及其遠端桌面主機服務 (被控端)。</p>
+            <pre><code># 下載最新的 Google Chrome 穩定版安裝包
+wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+
+# 安裝 Google Chrome
+sudo apt install ./google-chrome-stable_current_amd64.deb -y
+
+# 下載 Chrome Remote Desktop 主機服務安裝包
+wget https://dl.google.com/linux/direct/chrome-remote-desktop_current_amd64.deb
+
+# 安裝主機服務
+sudo apt install ./chrome-remote-desktop_current_amd64.deb -y
+
+# 刪除已下載的安裝包
+rm -f google-chrome-stable_current_amd64.deb chrome-remote-desktop_current_amd64.deb</code></pre>
+            <div class="note">
+                <strong>設定授權：</strong>
+                安裝完成後，您需要在一台有圖形介面的電腦上，登入同一個 Google 帳號，並前往 <a href="https://remotedesktop.google.com/headless" target="_blank" rel="noopener noreferrer">Chrome 遠端桌面網站</a> 產生一段 Debian Linux 的指令。將該指令複製並在您的 Ubuntu 伺服器終端機中執行，以完成授權與 PIN 碼設定。
+            </div>
+        </div>
+
+        <div class="step">
+            <h3>第三步：設定鑰匙圈密碼為空 (危險操作)</h3>
+            <div class="warning">
+                <p>此步驟將刪除預設的登入鑰匙圈。當應用程式下次需要存取時，系統會建立一個新的、無密碼保護的鑰匙圈，從而避免遠端連線時的密碼彈窗。請再次確認您已了解其安全風險。</p>
+            </div>
+            <pre><code># 刪除預設的鑰匙圈檔案
+# 這將在下次需要時觸發建立一個無密碼的鑰匙圈
+rm -f ~/.local/share/keyrings/login.keyring
+rm -f ~/.local/share/keyrings/user.keystore</code></pre>
+        </div>
+
+        <div class="step">
+            <h3>第四步：設定 NTFS 硬碟自動掛載</h3>
+            <p>此步驟將設定您的 NTFS 硬碟在每次系統重啟後自動掛載。</p>
+            <pre><code># 安裝 ntfs-3g 工具以支援 NTFS 讀寫
+sudo apt install ntfs-3g -y
+
+# 建立一個掛載點目錄 (您可以自訂路徑，例如 /mnt/data)
+sudo mkdir -p /mnt/ntfs_disk
+
+# 備份 fstab 檔案，以防設定出錯
+sudo cp /etc/fstab /etc/fstab.bak
+
+# 將自動掛載設定寫入 /etc/fstab
+# 使用 UUID 以確保裝置名稱變更時仍能正確掛載
+# uid=$(id -u) 和 gid=$(id -g) 會將磁碟擁有者設為目前登入的使用者
+echo "UUID=A6249A53249A2679 /mnt/ntfs_disk ntfs-3g defaults,uid=$(id -u),gid=$(id -g),windows_names 0 0" | sudo tee -a /etc/fstab
+
+# 測試掛載設定是否正確 (此指令會掛載 fstab 中所有未掛載的裝置)
+sudo mount -a</code></pre>
+        </div>
+
+        <div class="step">
+            <h3>第五步：安裝 NVIDIA 驅動與 FFmpeg</h3>
+            <p>安裝 NVIDIA 專有驅動以啟用硬體加速，並安裝 OBS 所需的 FFmpeg。</p>
+            <pre><code># 自動偵測並安裝推薦的 NVIDIA 驅動
+sudo ubuntu-drivers autoinstall
+
+# 安裝 FFmpeg
+sudo apt install ffmpeg -y
+
+# 建議此處重新啟動系統以確保所有驅動都已正確載入
+echo "驅動安裝完成，建議立即重新啟動系統。"
+echo "請執行: sudo reboot"</code></pre>
+        </div>
+
+        <div class="step">
+            <h3>第六步：安裝 OBS Studio</h3>
+            <p>提供兩種安裝方式，推薦使用官方 PPA。</p>
+            <h4>方式一：透過 OBS 官方 PPA 安裝 (推薦)</h4>
+            <pre><code>sudo add-apt-repository ppa:obsproject/obs-studio -y
+sudo apt update
+sudo apt install obs-studio -y</code></pre>
+            <h4>方式二：透過 Flatpak 安裝</h4>
+            <pre><code>sudo apt install flatpak -y
+flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+flatpak install flathub com.obsproject.Studio -y</code></pre>
+        </div>
+
+        <hr>
+
+        <div class="step">
+            <h2>第七步：安裝後驗證程序</h2>
+            <p>在執行完所有安裝步驟並重新啟動系統後，執行以下指令來驗證各項功能是否正常。</p>
+
+            <h3>1. 驗證 Google Remote Desktop Host</h3>
+            <pre><code># 檢查服務狀態，Active: active (running) 表示正常
+systemctl --user status chrome-remote-desktop</code></pre>
+            
+            <h3>2. 驗證 NTFS 硬碟掛載</h3>
+            <pre><code># 檢查磁碟掛載情況，您應該能看到 /dev/sda1 掛載在 /mnt/ntfs_disk
+df -h | grep '/dev/sda1'
+
+# 嘗試在掛載點建立一個測試檔案
+touch /mnt/ntfs_disk/test_file.tmp && echo "寫入測試成功"
+
+# 檢查檔案是否存在
+ls -l /mnt/ntfs_disk/test_file.tmp
+
+# 移除測試檔案
+rm /mnt/ntfs_disk/test_file.tmp</code></pre>
+
+            <h3>3. 驗證 FFmpeg 安裝</h3>
+            <pre><code># 顯示 FFmpeg 版本資訊，若成功顯示則表示安裝正常
+ffmpeg -version</code></pre>
+
+            <h3>4. 驗證 NVIDIA 硬體編解碼 (NVENC/NVDEC)</h3>
+            <pre><code># 檢查 NVIDIA 驅動與顯卡狀態
+nvidia-smi
+
+# 透過 FFmpeg 檢查可用的硬體編解碼器
+# 在輸出列表中尋找 h264_nvenc, hevc_nvenc (編碼器) 和 h264_cuvid, hevc_cuvid (解碼器)
+ffmpeg -codecs | grep nvenc
+ffmpeg -codecs | grep cuvid</code></pre>
+            <div class="note">
+                如果上述 `grep nvenc` 和 `grep cuvid` 指令有返回結果，則代表 FFmpeg 已成功辨識到您的 RTX 4070M 的硬體編解碼核心。您可以在 OBS 的「設定」->「輸出」中，將「編碼器」選項設定為「NVIDIA NVENC H.264」或「NVIDIA NVENC HEVC」以啟用硬體加速錄影/推流。
+            </div>
+        </div>
+        
+        <hr>
+        <p style="text-align: center; color: #6c757d; font-size: 0.9em;">所有程序已完成。現在您可以透過 Chrome 遠端桌面連線至 Ubuntu，並以硬體加速方式執行 OBS Studio。</p>
+    </div>
+
+</body>
+</html>

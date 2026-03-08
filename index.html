@@ -5,6 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>PiPi's Bookmark</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    
+    <link rel="icon" href="favicon/cloud_favicon_v2.png" type="image/png" sizes="32x32">
+    <link rel="apple-touch-icon" href="favicon/cloud_favicon_v2.png">
+
     <style>
         body { margin: 0; padding: 0; font-family: 'Lato', sans-serif; background: #fff; overflow-x: hidden; height: 100vh; }
         .header {
@@ -20,6 +24,7 @@
         button:hover { background: white; color: #00acc1; }
         #msg { margin-top: 15px; font-size: 14px; color: #ffdede; min-height: 1.2em; font-weight: bold; }
 
+        /* 🌊 4 層大波浪設定 */
         .waves { position: relative; width: 100%; height: 15vh; margin-bottom: -7px; min-height: 100px; max-height: 150px; }
         .parallax > use { animation: move-forever 25s cubic-bezier(.55,.5,.45,.5) infinite; }
         .parallax > use:nth-child(1) { animation-delay: -2s; animation-duration: 7s; }
@@ -58,6 +63,7 @@
 <div id="content-main"></div>
 
 <script>
+    // 1. 動態更新時鐘
     function updateTime() {
         const now = new Date();
         const y = now.getFullYear(), m = String(now.getMonth() + 1).padStart(2, '0'), d = String(now.getDate()).padStart(2, '0');
@@ -66,9 +72,7 @@
     }
     setInterval(updateTime, 1000); updateTime();
 
-    // --- 🔑 Token 打碎拼接區域 ---
-    // 假設您的亂碼是 "ABCDEFGHIJKLMN"
-    // 請將它拆成三段填入下面：
+    // 2. 🔑 Token 打碎拼接區域 (請更換為您的新 Token 亂碼)
     const k_p1 = "Z2hwX0U0UjZHVTNmaz"; 
     const k_p2 = "Fid3hVNnN6N0h2TFJiQm";
     const k_p3 = "VEdDhVQjJCQnd2TA==";
@@ -76,8 +80,30 @@
     const CFG = {
         user: "pipi-family",
         repo: "my-private-data",
-        _k: k_p1 + k_p2 + k_p3 // 執行時才會拼起來，躲過靜態掃描
+        _k: k_p1 + k_p2 + k_p3
     };
+
+    // 3. 🔄 自動恢復邏輯：檢查 SessionStorage
+    window.onload = function() {
+        const savedContent = sessionStorage.getItem('vault_content');
+        if (savedContent) {
+            showContent(savedContent);
+        }
+    };
+
+    function showContent(html) {
+        document.getElementById('login-ui').style.display = "none";
+        const main = document.getElementById('content-main');
+        main.style.display = "block";
+        main.innerHTML = html;
+        // 如果內容裡有 script，需要手動執行 (選配)
+        main.querySelectorAll('script').forEach(oldScript => {
+            const newScript = document.createElement('script');
+            Array.from(oldScript.attributes).forEach(attr => newScript.setAttribute(attr.name, attr.value));
+            newScript.appendChild(document.createTextNode(oldScript.innerHTML));
+            oldScript.parentNode.replaceChild(newScript, oldScript);
+        });
+    }
 
     async function fetchFromVault(file) {
         const url = `https://api.github.com/repos/${CFG.user}/${CFG.repo}/contents/${file}`;
@@ -98,10 +124,8 @@
             const storedHash = JSON.parse(passStr).hash;
             if (hash === storedHash) {
                 const html = await fetchFromVault("source.html");
-                document.getElementById('login-ui').style.display = "none";
-                const main = document.getElementById('content-main');
-                main.style.display = "block";
-                main.innerHTML = html;
+                sessionStorage.setItem('vault_content', html); // 💾 儲存狀態
+                showContent(html);
             } else { msg.innerText = "Access Denied."; }
         } catch (e) { msg.innerText = "Error: Token Revoked or Network Issue."; }
     }

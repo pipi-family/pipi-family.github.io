@@ -37,7 +37,7 @@
         nav a {
             text-decoration: none;
             color: var(--nav-link-color);
-            font-size: 18px; /* 快捷項目放大 */
+            font-size: 18px;
             font-weight: 500;
             display: block;
             padding: 8px 12px;
@@ -55,7 +55,7 @@
         h1 { border-bottom: 1px solid #eaecef; padding-bottom: 15px; font-size: 34px; }
         h2 { margin-top: 50px; border-left: 6px solid var(--accent-color); padding-left: 18px; font-size: 26px; }
         
-        /* 目錄結構專用樣式 */
+        /* 🛠️ 關鍵修正：目錄結構樣式 */
         .tree-box {
             background: #24292e;
             color: #e6edf3;
@@ -63,14 +63,18 @@
             border-radius: 10px;
             font-family: "Cascadia Code", "Courier New", monospace;
             font-size: 15px;
-            line-height: 1.4;
+            line-height: 1.5;
             margin: 20px 0;
             border: 1px solid #444;
+            
+            /* 保留原始空格與換行 */
+            white-space: pre; 
+            overflow-x: auto; /* 寬度不足時允許橫向捲動 */
         }
         .dir-comment { color: #8b949e; font-style: italic; }
 
         .step-zero { background: #e6ffed; border: 2px solid #34d058; padding: 25px; border-radius: 10px; margin: 25px 0; }
-        .code-block { background: #272822; color: #f8f8f2; padding: 22px; border-radius: 10px; font-family: monospace; margin: 25px 0; font-size: 15px; }
+        .code-block { background: #272822; color: #f8f8f2; padding: 22px; border-radius: 10px; font-family: monospace; margin: 25px 0; font-size: 15px; white-space: pre; overflow-x: auto; }
         footer { margin-top: 60px; color: #6a737d; font-size: 14px; text-align: center; border-top: 1px solid #eee; padding-top: 30px; }
     </style>
 </head>
@@ -91,7 +95,7 @@
 
 <main>
     <h1>GitHub Pages 網頁安全架構建置指南</h1>
-    <p>這是一份專業的建置指南，旨在指導開發者如何在公開的 GitHub 環境中，安全地部署私密個人網頁。</p>
+    <p>本文件旨在提供一個標準化的 GitHub Pages 私密化建置方案，確保 API 密鑰不外洩，並維持視覺與操作的穩定性。</p>
 
     <h2 id="sec0">0. 第零階段：帳號對接與加密地基</h2>
     <div class="step-zero">
@@ -115,20 +119,19 @@
     <h2 id="tree">2. 關鍵：雙倉庫目錄結構詳解</h2>
     <p>採用「懶人路徑同步法」，確保兩邊資源路徑完全一致，避免 404 報錯：</p>
     <div class="tree-box">
-GitHub // 您的帳號<br>
-┣━ 🌐 Public Repo (您的.github.io)<br>
-┃   ┣ 📂 background/    <span class="dir-comment">// 🖼️ UI背景圖 (直接渲染)</span><br>
-┃   ┣ 📂 ext_file/      <span class="dir-comment">// ⚙️ 外部插件與 JS</span><br>
-┃   ┣ 📂 favicon/       <span class="dir-comment">// ☁️ 清晰版圖標</span><br>
-┃   ┣ 📂 index_files/   <span class="dir-comment">// 🎨 選單 CSS 與樣式</span><br>
-┃   ┗ 📄 index.html      <span class="dir-comment">// 🔑 金庫大門 (解鎖邏輯)</span><br>
-┃<br>
-┗━ 🔒 Private Repo (私有數據庫)<br>
-    ┣ 📂 background/    <span class="dir-comment">// 📦 懶人同步備份 (路徑一致)</span><br>
-    ┣ 📂 ext_file/      <span class="dir-comment">// 📦 懶人同步備份</span><br>
-    ┣ 📄 pass.json      <span class="dir-comment">// 🔐 密碼 SHA-256 雜湊</span><br>
-    ┗ 📄 source.html    <span class="dir-comment">// 🔖 私密書籤 (解鎖後抓取)</span>
-    </div>
+GitHub // 您的帳號
+┣━ 🌐 Public Repo (您的.github.io)
+┃   ┣ 📂 background/    <span class="dir-comment">// 🖼️ UI 背景圖 (直接渲染)</span>
+┃   ┣ 📂 ext_file/      <span class="dir-comment">// ⚙️ 外部插件與 JS</span>
+┃   ┣ 📂 favicon/       <span class="dir-comment">// ☁️ 清晰版圖標</span>
+┃   ┣ 📂 index_files/   <span class="dir-comment">// 🎨 選單 CSS 與樣式</span>
+┃   ┗ 📄 index.html      <span class="dir-comment">// 🔑 金庫大門 (解鎖邏輯)</span>
+┃
+┗━ 🔒 Private Repo (私有數據庫)
+    ┣ 📂 background/    <span class="dir-comment">// 📦 懶人同步備份 (路徑一致)</span>
+    ┣ 📂 ext_file/      <span class="dir-comment">// 📦 懶人同步備份</span>
+    ┣ 📄 pass.json      <span class="dir-comment">// 🔐 密碼 SHA-256 雜湊</span>
+    ┗ 📄 source.html    <span class="dir-comment">// 🔖 私密書籤 (解鎖後抓取)</span></div>
 
     <h2 id="sec2">3. API Key 安全轉碼 (Base64)</h2>
     <p>為了閃避 GitHub 的掃描機器人，必須將 PAT (Token) 轉換為 Base64 字串，隱藏 <code>ghp_</code> 前綴特徵。</p>
@@ -136,13 +139,12 @@ GitHub // 您的帳號<br>
     <h2 id="sec3">4. Token 碎裂化打散技術</h2>
     <p>將編碼後的字串進行物理拆分（例如拆成三段變數），確保即便掃描器讀取到代碼，也無法還原成有效的 Token。</p>
     <div class="code-block">
-        const k_p1 = "Z2hwX3"; // 碎片 A <br>
-        const k_p2 = "h4eHgx"; // 碎片 B <br>
-        const k_p3 = "NTV6dw=="; // 碎片 C
-    </div>
+const k_p1 = "Z2hwX3"; // 碎片 A 
+const k_p2 = "h4eHgx"; // 碎片 B 
+const k_p3 = "NTV6dw=="; // 碎片 C</div>
 
     <h2 id="sec4">5. 全域透明 UI 邏輯</h2>
-    <p>為了解決「背景不動、內容捲動」時出現的漏白問題，必須將 <code>index.html</code> 的外層 <code>html</code> 與 <code>body</code> 設為 <code>transparent !important</code>。</p>
+    <p>為了解決「背景不動、內容捲動」時出現的漏白問題，必須將 <code>index.html</code> 的外層容器設為 <code>transparent !important</code>。</p>
     
 
     <h2 id="sec5">6. Session 持久化恢復 (Reload)</h2>

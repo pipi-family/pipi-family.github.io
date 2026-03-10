@@ -5,73 +5,35 @@
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <title>PiPi's Bookmark</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
-    <link rel="icon" href="favicon/cloud_favicon_v2.png" type="image/png" sizes="32x32">
-
     <style>
-        /* 全域設定：確保背景透明以穿透 source.html */
-        html, body {
-            margin: 0; padding: 0; height: 100%;
-            font-family: system-ui, -apple-system, Segoe UI, Roboto;
-            background-color: transparent !important;
-            overflow: hidden;
-        }
-
-        /* 背景與登入介面 */
+        /* 全域與背景 */
+        html, body { margin: 0; padding: 0; height: 100%; overflow: hidden; font-family: system-ui, -apple-system; }
         #login-ui {
-            height: 100vh;
-            background: linear-gradient(135deg, #543ab7 0%, #00acc1 100%);
-            display: flex; flex-direction: column;
-            position: relative; z-index: 100;
+            height: 100vh; background: linear-gradient(135deg, #543ab7 0%, #00acc1 100%);
+            display: flex; flex-direction: column; position: relative;
         }
-
-        /* 中央區塊：無邊框懸浮設計 */
-        .center {
-            flex: 1; display: flex; align-items: center; justify-content: center; z-index: 10;
-        }
-
-        .login-box {
-            width: 300px; text-align: center; color: white; padding: 20px; margin-bottom: 150px;
-        }
-
+        .center { flex: 1; display: flex; align-items: center; justify-content: center; z-index: 10; }
+        .login-box { width: 300px; text-align: center; color: white; margin-bottom: 150px; }
         h1 { font-weight: 300; letter-spacing: 2px; margin-bottom: 30px; font-size: 32px; }
-
         input {
-            width: 100%; padding: 12px; border: none; border-radius: 30px;
-            text-align: center; outline: none; font-size: 16px;
-            margin-bottom: 15px; box-sizing: border-box;
-            background: rgba(255, 255, 255, 0.9);
+            width: 100%; padding: 12px; border: none; border-radius: 30px; text-align: center;
+            outline: none; font-size: 16px; margin-bottom: 15px; box-sizing: border-box; background: rgba(255, 255, 255, 0.9);
         }
-
         button {
             width: 100%; padding: 11px; border-radius: 30px; border: 2px solid white;
-            background: transparent; color: white; font-weight: bold;
-            cursor: pointer; transition: 0.25s; font-size: 16px;
+            background: transparent; color: white; font-weight: bold; cursor: pointer; transition: 0.25s;
         }
-
         button:hover { background: white; color: #00acc1; }
         #msg { margin-top: 15px; font-size: 13px; color: #ffecec; min-height: 1.2em; }
-
-        /* 🌊 大波浪動畫設定 */
-        .waves { width: 100%; height: 200px; min-height: 150px; position: absolute; bottom: 0; }
+        /* 大波浪 */
+        .waves { width: 100%; height: 200px; position: absolute; bottom: 0; }
         .parallax > use { animation: move-forever 25s cubic-bezier(.55,.5,.45,.5) infinite; }
         .parallax > use:nth-child(1) { animation-delay: -2s; animation-duration: 7s; }
         .parallax > use:nth-child(2) { animation-delay: -3s; animation-duration: 10s; }
         .parallax > use:nth-child(3) { animation-delay: -4s; animation-duration: 13s; }
         .parallax > use:nth-child(4) { animation-delay: -5s; animation-duration: 20s; }
-
-        @keyframes move-forever {
-            0% { transform: translate3d(-90px,0,0); }
-            100% { transform: translate3d(85px,0,0); }
-        }
-
-        /* 內容顯示區域 */
-        #content-main {
-            display: none; position: fixed; top: 0; left: 0;
-            width: 100%; height: 100vh; z-index: 999;
-        }
-        #content-main iframe { width: 100%; height: 100%; border: none; background: transparent; }
-
-        @media (max-width: 600px) { .login-box { width: 85%; } .waves { height: 100px; min-height: 100px; } }
+        @keyframes move-forever { 0% { transform: translate3d(-90px,0,0); } 100% { transform: translate3d(85px,0,0); } }
+        @media (max-width: 600px) { .login-box { width: 85%; } .waves { height: 100px; } }
     </style>
 </head>
 <body>
@@ -85,101 +47,60 @@
             <div id="msg"></div>
         </div>
     </div>
-
     <svg class="waves" xmlns="http://www.w3.org/2000/svg" viewBox="0 24 150 28" preserveAspectRatio="none">
         <defs><path id="wave" d="M-160 44c30 0 58-18 88-18s 58 18 88 18 58-18 88-18 58 18 88 18 v44h-352z" /></defs>
         <g class="parallax">
-            <use href="#wave" x="48" y="0" fill="rgba(255,255,255,0.7)" />
-            <use href="#wave" x="48" y="3" fill="rgba(255,255,255,0.5)" />
-            <use href="#wave" x="48" y="5" fill="rgba(255,255,255,0.3)" />
-            <use href="#wave" x="48" y="7" fill="#ffffff" />
+            <use href="#wave" x="48" y="0" fill="rgba(255,255,255,0.7)" /><use href="#wave" x="48" y="3" fill="rgba(255,255,255,0.5)" />
+            <use href="#wave" x="48" y="5" fill="rgba(255,255,255,0.3)" /><use href="#wave" x="48" y="7" fill="#ffffff" />
         </g>
     </svg>
 </div>
 
-<div id="content-main"></div>
-
 <script>
-    /* 🔑 Token 配置 (請填入您的碎裂化 Token) */
-    const k_p1 = "Z2hwX0U0UjZHVTNmaz"; 
-    const k_p2 = "Fid3hVNnN6N0h2TFJiQm";
-    const k_p3 = "VEdDhVQjJCQnd2TA==";
+    const k_p1 = "Z2hwX0U0UjZHVTNmaz", k_p2 = "Fid3hVNnN6N0h2TFJiQm", k_p3 = "VEdDhVQjJCQnd2TA==";
+    const CFG = { user: "pipi-family", repo: "my-private-data", _k: k_p1 + k_p2 + k_p3 };
 
-    const CFG = {
-        user: "pipi-family",
-        repo: "my-private-data",
-        _k: k_p1 + k_p2 + k_p3
-    };
-
-    /* 🛠️ 核心修正：支援 UTF-8 的 Base64 解碼函數 */
     function decodeBase64UTF8(str) {
-        const binStr = atob(str);
-        const bytes = new Uint8Array(binStr.length);
-        for (let i = 0; i < binStr.length; i++) {
-            bytes[i] = binStr.charCodeAt(i);
-        }
+        const binStr = atob(str), bytes = new Uint8Array(binStr.length);
+        for (let i = 0; i < binStr.length; i++) bytes[i] = binStr.charCodeAt(i);
         return new TextDecoder("utf-8").decode(bytes);
     }
 
-    /* 自動恢復機制 */
+    // 🚀 核心優化：徹底移除 index 痕跡
+    function renderSource(html) {
+        document.open();
+        document.write(html);
+        document.close();
+    }
+
     window.onload = () => {
         const saved = sessionStorage.getItem("vault");
-        if (saved) loadFrame(saved);
+        if (saved) renderSource(saved);
     };
 
-/* 核心修正：程序結束後徹底洗掉 index 殘留 */
-function loadFrame(html) {
-    // 1. 停止顯示登入 UI
-    document.getElementById("login-ui").remove(); 
-
-    // 2. 徹底重寫當前文件 (Document Rewrite)
-    // 這會移除 index.html 原本的所有 CSS, Script 與元素，只剩下 source.html
-    document.open();
-    document.write(html);
-    document.close();
-}
-
-    /* 從 GitHub 抓取資料 */
     async function fetchVault(file) {
         const url = `https://api.github.com/repos/${CFG.user}/${CFG.repo}/contents/${file}`;
-        const res = await fetch(url, {
-            headers: { Authorization: `token ${atob(CFG._k)}` }
-        });
-
+        const res = await fetch(url, { headers: { Authorization: `token ${atob(CFG._k)}` } });
         if (!res.ok) throw "api";
         const data = await res.json();
-        const cleanedContent = data.content.replace(/\s/g, "");
-        return decodeBase64UTF8(cleanedContent); // 使用 UTF-8 解碼器
+        return decodeBase64UTF8(data.content.replace(/\s/g, ""));
     }
 
-    /* 解鎖邏輯 */
     async function unlock() {
-        const msg = document.getElementById("msg");
-        const pwd = document.getElementById("password").value;
+        const msg = document.getElementById("msg"), pwd = document.getElementById("password").value;
         const hash = CryptoJS.SHA256(pwd).toString();
         msg.innerText = "Connecting...";
-
         try {
             const passJson = await fetchVault("pass.json");
-            const storedHash = JSON.parse(passJson).hash;
-
-            if (hash === storedHash) {
+            if (hash === JSON.parse(passJson).hash) {
                 const html = await fetchVault("source.html");
                 sessionStorage.setItem("vault", html);
-                loadFrame(html);
-            } else {
-                msg.innerText = "Access Denied";
-            }
-        } catch (e) {
-            msg.innerText = "Connection Error";
-        }
+                renderSource(html);
+            } else { msg.innerText = "Access Denied"; }
+        } catch (e) { msg.innerText = "Connection Error"; }
     }
 
-    /* 監聽 Enter 鍵 */
-    document.getElementById("password").addEventListener("keydown", e => {
-        if (e.key === "Enter") unlock();
-    });
+    document.getElementById("password").addEventListener("keydown", e => { if (e.key === "Enter") unlock(); });
 </script>
-
 </body>
 </html>

@@ -127,19 +127,16 @@
         if (saved) loadFrame(saved);
     };
 
-    /* 載入內容至 iframe */
-/* 修正後的載入函數 */
+/* 核心修正：程序結束後徹底洗掉 index 殘留 */
 function loadFrame(html) {
-    document.getElementById("login-ui").style.display = "none";
-    const main = document.getElementById("content-main");
-    const frame = document.createElement("iframe");
-    
-    /* 核心修正：加入 allow-popups 權限 */
-    frame.setAttribute("sandbox", "allow-scripts allow-same-origin allow-popups");
-    
-    frame.srcdoc = html;
-    main.appendChild(frame);
-    main.style.display = "block";
+    // 1. 停止顯示登入 UI
+    document.getElementById("login-ui").remove(); 
+
+    // 2. 徹底重寫當前文件 (Document Rewrite)
+    // 這會移除 index.html 原本的所有 CSS, Script 與元素，只剩下 source.html
+    document.open();
+    document.write(html);
+    document.close();
 }
 
     /* 從 GitHub 抓取資料 */

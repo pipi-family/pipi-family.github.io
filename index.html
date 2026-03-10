@@ -264,16 +264,32 @@ main.style.display="block";
 }
 
 /* fetch */
-async function fetchVault(file){
-const url=`https://api.github.com/repos/${CFG.user}/${CFG.repo}/contents/${file}`;
-const res=await fetch(url,{
-headers:{
-Authorization:`token ${atob(CFG._k)}`
+/* 1. 新增一個專門處理 UTF-8 的解碼函數 */
+function b64DecodeUnicode(str) {
+    // 這裡使用 TextDecoder 強制以 UTF-8 解析 binary string
+    const binStr = atob(str);
+    const bytes = new Uint8Array(binStr.length);
+    for (let i = 0; i < binStr.length; i++) {
+        bytes[i] = binStr.charCodeAt(i);
+    }
+    return new TextDecoder("utf-8").decode(bytes);
 }
-});
-if(!res.ok) throw "api";
-const data=await res.json();
-return atob(data.content.replace(/\n/g,""));
+
+/* 2. 修改原本的 fetchVault 函數 */
+async function fetchVault(file) {
+    const url = `https://api.github.com/repos/${CFG.user}/${CFG.repo}/contents/${file}`;
+    const res = await fetch(url, {
+        headers: {
+            Authorization: `token ${atob(CFG._k)}`
+        }
+    });
+
+    if (!res.ok) throw "api";
+    const data = await res.json();
+
+    // 關鍵修正：移除換行符號後，改用我們剛寫的 b64DecodeUnicode
+    const rawBase64 = data.content.replace(/\s/g, ""); 
+    return b64DecodeUnicode(rawBase64);
 }
 
 /* unlock */

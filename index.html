@@ -128,17 +128,19 @@
     };
 
     /* 載入內容至 iframe */
-    function loadFrame(html) {
-        document.getElementById("login-ui").style.display = "none";
-        const main = document.getElementById("content-main");
-        const frame = document.createElement("iframe");
-        frame.setAttribute("sandbox", "allow-scripts allow-same-origin");
-        
-        // 確保注入時包含正確編碼宣告
-        frame.srcdoc = html;
-        main.appendChild(frame);
-        main.style.display = "block";
-    }
+/* 修正後的載入函數 */
+function loadFrame(html) {
+    document.getElementById("login-ui").style.display = "none";
+    const main = document.getElementById("content-main");
+    const frame = document.createElement("iframe");
+    
+    /* 核心修正：加入 allow-popups 權限 */
+    frame.setAttribute("sandbox", "allow-scripts allow-same-origin allow-popups");
+    
+    frame.srcdoc = html;
+    main.appendChild(frame);
+    main.style.display = "block";
+}
 
     /* 從 GitHub 抓取資料 */
     async function fetchVault(file) {

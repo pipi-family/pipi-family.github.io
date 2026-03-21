@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TOYOTA T190 CORONA EXSIOR</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: "微軟正黑體", Arial, sans-serif; }
+
+        /* 背景底圖 */
+        .hero {
+            position: relative;
+            height: 100vh;
+            background: url("img/hero.JPG") center/cover no-repeat fixed;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .hero::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1;
+        }
+
+        /* 主標題資訊 */
+        .content {
+            position: relative;
+            color: white;
+            text-align: center;
+            z-index: 2;
+            transition: all 0.6s cubic-bezier(0.19, 1, 0.22, 1);
+        }
+        .content.mini { transform: translateY(-35vh) scale(0.85); opacity: 0.8; }
+        h1 { font-size: 52px; letter-spacing: 5px; text-shadow: 0 4px 15px rgba(0,0,0,0.8); }
+        h2 { margin-top: 10px; font-weight: normal; color: #f0a500; }
+
+        /* --- 左側隱藏選單核心樣式 --- */
+        .side-menu {
+            position: fixed;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            transition: all 0.5s ease;
+        }
+
+        /* 半圓形觸發鈕 */
+        .menu-trigger {
+            width: 50px;
+            height: 100px;
+            background: rgba(240, 165, 0, 0.4); /* 半透明橙 */
+            backdrop-filter: blur(5px);
+            border-radius: 0 50px 50px 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            border: 1px solid rgba(255,255,255,0.3);
+            border-left: none;
+            transition: all 0.3s;
+        }
+
+        /* 箭頭圖示 (CSS 繪製) */
+        .arrow {
+            width: 12px;
+            height: 12px;
+            border-top: 3px solid white;
+            border-right: 3px solid white;
+            transform: rotate(45deg);
+            margin-left: -5px;
+            transition: 0.5s;
+        }
+
+        /* 垂直按鈕容器 (平時隱藏) */
+        .side-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(10px);
+            border-radius: 0 15px 15px 0;
+            margin-left: -250px; /* 初始藏在左邊 */
+            opacity: 0;
+            transition: all 0.5s cubic-bezier(0.19, 1, 0.22, 1);
+        }
+
+        /* 滑鼠滑過整個側邊欄時展開 */
+        .side-menu:hover .side-buttons {
+            margin-left: 0;
+            opacity: 1;
+        }
+        .side-menu:hover .menu-trigger {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        /* 按鈕樣式 (垂直排列) */
+        .side-btn {
+            padding: 15px 25px;
+            background: transparent;
+            color: #f0a500;
+            border: 1px solid #f0a500;
+            border-radius: 5px;
+            font-size: 17px;
+            font-weight: bold;
+            cursor: pointer;
+            text-align: left;
+            transition: 0.3s;
+            white-space: nowrap;
+            min-width: 180px;
+        }
+
+        .side-btn:hover {
+            background: #f0a500;
+            color: #000;
+            box-shadow: 0 0 15px rgba(240, 165, 0, 0.5);
+        }
+
+        /* --- Iframe 視窗維持原樣 --- */
+        #data-viewer {
+            position: absolute;
+            bottom: -100%; 
+            left: 50%;
+            transform: translateX(-50%);
+            width: 98%; max-width: 1400px; height: 88vh;
+            background: white; z-index: 10;
+            border-radius: 20px 20px 0 0;
+            box-shadow: 0 -15px 40px rgba(0,0,0,0.7);
+            transition: bottom 0.6s cubic-bezier(0.19, 1, 0.22, 1);
+            overflow: hidden;
+        }
+        #data-viewer.active { bottom: 0; }
+        .close-btn {
+            position: absolute; right: 25px; top: 20px; font-size: 28px;
+            color: #fff; background: #333; width: 45px; height: 45px;
+            display: flex; align-items: center; justify-content: center;
+            border-radius: 50%; cursor: pointer; transition: 0.3s; z-index: 12;
+        }
+        .close-btn:hover { background: #f0a500; color: #000; transform: rotate(90deg); }
+        iframe { width: 100%; height: 100%; border: none; padding-top: 10px; }
+
+    </style>
+</head>
+<body>
+
+<section class="hero">
+    <!-- 主標題 -->
+    <div class="content" id="main-content">
+        <h1>TOYOTA CORONA EXSIOR</h1>
+        <h2>AHTEG 2.0 GLi 電氣維修技術手冊</h2>
+    </div>
+
+    <!-- 左側隱藏式選單 -->
+    <div class="side-menu">
+        <div class="menu-trigger">
+            <div class="arrow"></div>
+        </div>
+        <div class="side-buttons">
+            <button onclick="openData('fuses.html')" class="side-btn">● 車內保險絲</button>
+            <button onclick="openData('engineroom.html')" class="side-btn">● 引擎室保險絲</button>
+            <button onclick="openData('bulbs.html')" class="side-btn">● 全車燈泡規格</button>
+            <button onclick="openData('manual.html')" class="side-btn">● 車型諸元規格</button>
+        </div>
+    </div>
+
+    <!-- 資料顯示窗 -->
+    <div id="data-viewer">
+        <div class="close-btn" onclick="closeData()">×</div>
+        <iframe id="info-frame" src=""></iframe>
+    </div>
+</section>
+
+<script>
+    function openData(url) {
+        const viewer = document.getElementById('data-viewer');
+        const frame = document.getElementById('info-frame');
+        const content = document.getElementById('main-content');
+        frame.src = url;
+        viewer.classList.add('active');
+        content.classList.add('mini'); 
+    }
+
+    function closeData() {
+        const viewer = document.getElementById('data-viewer');
+        const content = document.getElementById('main-content');
+        viewer.classList.remove('active');
+        content.classList.remove('mini');
+        setTimeout(() => { document.getElementById('info-frame').src = ""; }, 600);
+    }
+</script>
+
+</body>
+</html>

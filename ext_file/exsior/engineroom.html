@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <title>Exsior Engine Room Fuse Map</title>
+    <style>
+        body {
+            background: #e6e6e6;
+            font-family: "Times New Roman", "微軟正黑體", serif;
+            display: flex;
+            justify-content: center;
+            padding: 20px;
+            margin: 0;
+        }
+
+        #fuses-board {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            position: relative;
+            display: inline-block;
+        }
+
+        .header-bar {
+            background: black;
+            color: white;
+            padding: 12px;
+            margin-bottom: 20px;
+            font-size: 24px;
+            font-weight: bold;
+            text-align: center;
+            text-transform: uppercase;
+        }
+
+        /* 圖片容器 */
+        .photo-container {
+            position: relative;
+            cursor: default;
+        }
+
+        .photo-container img {
+            display: block;
+            width: 1000px; /* 寬度固定以利精準定位 */
+            height: auto;
+            border: 2px solid #ccc;
+        }
+
+        /* 熱點感應區 (平時透明) */
+        .hotspot {
+            position: absolute;
+            background: rgba(255, 255, 255, 0);
+            border: 2px solid transparent;
+            z-index: 10;
+        }
+
+        /* 游標移入效果 */
+        .hotspot:hover {
+            border: 2px solid #f0a500;
+            background: rgba(240, 165, 0, 0.15);
+        }
+
+        /* --- 大型彩色註解 Tooltip --- */
+        .tooltip {
+            position: absolute;
+            bottom: 110%; /* 顯示在元件上方 */
+            left: 50%;
+            transform: translateX(-50%);
+            min-width: 200px;
+            padding: 12px 18px;
+            border-radius: 8px;
+            font-size: 20px; /* 加大字體 */
+            font-weight: bold;
+            color: white;
+            text-align: center;
+            display: none;
+            z-index: 100;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.4);
+            pointer-events: none;
+            white-space: nowrap;
+        }
+
+        /* 讓 Tooltip 在熱點 hover 時出現 */
+        .hotspot:hover .tooltip {
+            display: block;
+        }
+
+        /* --- 顏色規格定義 --- */
+        .a7_5 { background: #8B4513; } /* 棕色 */
+        .a10  { background: #d00000; } /* 紅色 */
+        .a15  { background: #0050ff; } /* 藍色 */
+        .a20  { background: #ffd500; color: black !important; } /* 黃色 */
+        .a30  { background: #00a651; } /* 綠色 */
+        .a40  { background: #ff7f00; } /* 橘色 */
+        .a50  { background: #ff99cc; color: black !important; } /* 粉色 */
+        .a60  { background: #e1e100; color: black !important; } /* 亮黃 */
+        .a100 { background: #81ecec; color: black !important; } /* 淺藍 */
+        .relay { background: #444444; border: 1px solid #fff; } /* 繼電器深灰 */
+
+    </style>
+</head>
+<body>
+
+<div id="fuses-board">
+    <div class="header-bar">ESXIOR ENGINE ROOM FUSE BOX - QUICK VIEW</div>
+
+    <div class="photo-container">
+        <!-- 圖片路徑 -->
+        <img src="./img/engineroom.png" alt="Engine Room Fuse Box">
+
+        <!-- --- 第一列 (左) --- -->
+        <div class="hotspot" style="top:7%;  left:8%;  width:16%; height:23%;">
+            <div class="tooltip relay">HEAD RELAY<br>大燈主繼電器</div>
+        </div>
+        <div class="hotspot" style="top:43%; left:8.5%;  width:7%;  height:18%;">
+            <div class="tooltip a50">HTR 50A<br>暖氣/冷氣鼓風機</div>
+        </div>
+        <div class="hotspot" style="top:43%; left:16.5%; width:7%;  height:18%;">
+            <div class="tooltip a15">MAIN 15A<br>引擎主電源 (EFI/ALT)</div>
+        </div>
+        <div class="hotspot" style="top:65%; left:10%; width:15%; height:25%;">
+            <div class="tooltip relay">AM1 RELAY<br>點火電源繼電器</div>
+        </div>
+
+        <!-- --- 第二列 (中) --- -->
+        <div class="hotspot" style="top:7%;  left:27%; width:13%; height:19%;">
+            <div class="tooltip relay">HORN RELAY<br>喇叭繼電器</div>
+        </div>
+        <div class="hotspot" style="top:35%; left:27%; width:11%; height:6.5%;">
+            <div class="tooltip a30">SPARE 30A<br>備用保險絲 (綠)</div>
+        </div>
+        <div class="hotspot" style="top:45%; left:27%; width:11%; height:6.5%;">
+            <div class="tooltip a60">ABS 60A<br>防鎖死煞車系統</div>
+        </div>
+        <div class="hotspot" style="top:55%; left:27%; width:11%; height:6.5%;">
+            <div class="tooltip a30">AM2 30A<br>點火/啟動系統 (綠)</div>
+        </div>
+        <div class="hotspot" style="top:66%; left:26%; width:16%; height:25%;">
+            <div class="tooltip relay">HEATER RELAY<br>暖氣繼電器</div>
+        </div>
+
+        <!-- --- 第三列 --- -->
+        <div class="hotspot" style="top:7%;  left:43%; width:14%; height:23%;">
+            <div class="tooltip relay">FAN RELAY<br>水箱散熱風扇繼電器</div>
+        </div>
+        <div class="hotspot" style="top:35%; left:43%; width:11%; height:6.5%;">
+            <div class="tooltip a15">EFI 15A<br>燃油噴射系統</div>
+        </div>
+        <div class="hotspot" style="top:45%; left:43%; width:11%; height:6.5%;">
+            <div class="tooltip a30">CDS 30A<br>冷凝器風扇保險絲</div>
+        </div>
+        <div class="hotspot" style="top:55%; left:43%; width:11%; height:6.5%;">
+            <div class="tooltip a100">ALT 100A<br>發電機總保險絲</div>
+        </div>
+        <div class="hotspot" style="top:66%; left:43%; width:15%; height:25%;">
+            <div class="tooltip relay">FAN NO.2 RELAY<br>風扇切換繼電器</div>
+        </div>
+
+        <!-- --- NO 1 區 --- -->
+        <div class="hotspot" style="top:48%; left:58.5%; width:7%;  height:15%;">
+            <div class="tooltip a20">CDS 20A<br>冷凝風扇分流</div>
+        </div>
+        <div class="hotspot" style="top:48%; left:66.5%; width:7%;  height:15%;">
+            <div class="tooltip a20">RDI 20A<br>水箱風扇分路</div>
+        </div>
+        <div class="hotspot" style="top:66%; left:58%; width:16%; height:25%;">
+            <div class="tooltip relay">ST RELAY<br>啟動馬達繼電器</div>
+        </div>
+
+        <!-- --- 右側獨立排 --- -->
+        <div class="hotspot" style="top:6%;  left:82%; width:10%; height:7.5%;">
+            <div class="tooltip a10">DOME 10A<br>室內燈/時鐘/記憶電源</div>
+        </div>
+        <div class="hotspot" style="top:15.5%; left:82%; width:10%; height:7.5%;">
+            <div class="tooltip a15">HAZARD 15A<br>警告燈/方向燈</div>
+        </div>
+        <div class="hotspot" style="top:25.5%; left:82%; width:10%; height:7.5%;">
+            <div class="tooltip a20">STOP 20A<br>煞車燈系統</div>
+        </div>
+        <div class="hotspot" style="top:41%; left:82%; width:10%; height:11%;">
+            <div class="tooltip a7_5">ALT-S 7.5A<br>發電機電壓偵測</div>
+        </div>
+        <div class="hotspot" style="top:57%; left:81%; width:13%; height:14%;">
+            <div class="tooltip a100">ALT MAIN<br>發電機總路</div>
+        </div>
+        <div class="hotspot" style="top:74%; left:81%; width:13%; height:14%;">
+            <div class="tooltip a40">MAIN FUSE<br>全車總保險絲</div>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

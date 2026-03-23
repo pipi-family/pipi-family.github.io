@@ -105,18 +105,30 @@
     }
 
     async function unlock() {
-        const msg = document.getElementById("msg"), pwd = document.getElementById("password").value;
-        const hash = CryptoJS.SHA256(pwd).toString();
-        msg.innerText = "Connecting...";
-        try {
-            const passJson = await fetchVault("pass.json");
-            if (hash === JSON.parse(passJson).hash) {
-                const html = await fetchVault("source.html");
-                sessionStorage.setItem("vault", html);
-                renderSource(html);
-            } else { msg.innerText = "Access Denied"; }
-        } catch (e) { msg.innerText = "Connection Error"; }
+    const msg = document.getElementById("msg");
+    const pwd = document.getElementById("password").value;
+    const overlay = document.getElementById("loading-overlay"); // 🚀 取得遮罩
+    const hash = CryptoJS.SHA256(pwd).toString();
+    
+    msg.innerText = "Connecting...";
+    try {
+        const passJson = await fetchVault("pass.json");
+        if (hash === JSON.parse(passJson).hash) {
+            
+            // 🚀 關鍵動作：驗證成功後立刻顯示遮罩，蓋住接下來的 FOUC
+            overlay.style.display = "flex";
+            setTimeout(() => overlay.style.opacity = "1", 10); 
+
+            const html = await fetchVault("source.html");
+            sessionStorage.setItem("vault", html);
+            renderSource(html);
+        } else { 
+            msg.innerText = "Access Denied"; 
+        }
+    } catch (e) { 
+        msg.innerText = "Connection Error"; 
     }
+}
 
     document.getElementById("password").addEventListener("keydown", e => { if (e.key === "Enter") unlock(); });
 </script>

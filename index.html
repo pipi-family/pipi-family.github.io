@@ -34,10 +34,28 @@
         .parallax > use:nth-child(4) { animation-delay: -5s; animation-duration: 20s; }
         @keyframes move-forever { 0% { transform: translate3d(-90px,0,0); } 100% { transform: translate3d(85px,0,0); } }
         @media (max-width: 600px) { .login-box { width: 85%; } .waves { height: 100px; } }
+        /* 🚀 新增：轉場遮罩層（紫陽花背景） */
+        #loading-overlay {
+        position: fixed;
+        top: 0; left: 0;
+        width: 100vw; height: 100vh;
+        /* 這裡路徑請確保與你的 Repo 結構一致 */
+        background: #000 url('background/wallpaper2you_345056.jpg') no-repeat center center;
+        background-size: cover;
+        z-index: 9999; /* 確保在最上層 */
+        display: none; /* 預設隱藏 */
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 24px;
+        letter-spacing: 5px;
+        text-shadow: 0 0 15px rgba(0,0,0,0.8);
+        opacity: 0;
+        transition: opacity 0.4s ease;}        
     </style>
 </head>
 <body>
-
+<div id="loading-overlay">LOADING...</div>
 <div id="login-ui">
     <div class="center">
         <div class="login-box">

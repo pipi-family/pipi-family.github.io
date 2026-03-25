@@ -58,12 +58,19 @@
 <div id="loading-overlay">LOADING...</div>
 <div id="login-ui">
     <div class="center">
-        <div class="login-box">
-            <h1>PiPi's Bookmark</h1>
-            <input type="password" id="password" placeholder="ENTER PASSWORD" autofocus>
-            <button onclick="unlock()">UNLOCK</button>
-            <div id="msg"></div>
-        </div>
+<div class="login-box">
+    <h1>PiPi's Bookmark</h1>
+    <form id="login-form" onsubmit="event.preventDefault(); unlock();">
+        <input type="text" name="username" value="pipi" style="display:none;" autocomplete="username">        
+        <input type="password" id="password" name="password" 
+               placeholder="ENTER PASSWORD" 
+               autocomplete="current-password" 
+               autofocus>
+               
+        <button type="submit">UNLOCK</button>
+    </form>
+    <div id="msg"></div>
+</div>
     </div>
     <svg class="waves" xmlns="http://www.w3.org/2000/svg" viewBox="0 24 150 28" preserveAspectRatio="none">
         <defs><path id="wave" d="M-160 44c30 0 58-18 88-18s 58 18 88 18 58-18 88-18 58 18 88 18 v44h-352z" /></defs>

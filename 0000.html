@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>PiPi's Bookmark</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <style>
+        /* 全域與背景 */
+        html, body { margin: 0; padding: 0; height: 100%; overflow: hidden; font-family: system-ui, -apple-system; background-color: #000; }
+        
+        /* 🚀 影片背景設定 */
+        #video-background {
+            position: fixed;
+            right: 0;
+            bottom: 0;
+            min-width: 100%;
+            min-height: 100%;
+            width: auto;
+            height: auto;
+            z-index: -1;
+            object-fit: cover; /* 確保影片滿版不變形 */
+        }
+
+        #login-ui {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            background: rgba(0, 0, 0, 0.2); /* 輕微遮罩增加文字可讀性 */
+        }
+
+        .center { flex: 1; display: flex; align-items: center; justify-content: center; z-index: 10; }
+        .login-box { width: 300px; text-align: center; color: white; margin-bottom: 50px; }
+        
+        h1 { 
+            font-weight: 300; 
+            letter-spacing: 2px; 
+            margin-bottom: 30px; 
+            font-size: 32px; 
+            text-shadow: 0 2px 10px rgba(0,0,0,0.5); 
+        }
+
+        /* 🚀 輸入框全透明化 */
+        input {
+            width: 100%; padding: 12px; 
+            border: 1px solid rgba(255, 255, 255, 0.5); 
+            border-radius: 30px; 
+            text-align: center;
+            outline: none; font-size: 16px; margin-bottom: 15px; box-sizing: border-box; 
+            background: rgba(255, 255, 255, 0.1); /* 極低透明背景 */
+            color: white;
+            backdrop-filter: blur(5px); /* 毛玻璃效果，若不需要可刪除 */
+            transition: 0.3s;
+        }
+        input::placeholder { color: rgba(255, 255, 255, 0.7); }
+        input:focus { border-color: white; background: rgba(255, 255, 255, 0.2); }
+
+        /* 🚀 按鈕透明化 */
+        button {
+            width: 100%; padding: 11px; border-radius: 30px; 
+            border: 2px solid rgba(255, 255, 255, 0.8);
+            background: transparent; 
+            color: white; font-weight: bold; cursor: pointer; transition: 0.25s;
+            letter-spacing: 2px;
+        }
+        button:hover { background: rgba(255, 255, 255, 1); color: #333; }
+
+        #msg { margin-top: 15px; font-size: 13px; color: #ffffff; text-shadow: 0 1px 5px rgba(0,0,0,0.5); min-height: 1.2em; }
+
+        /* 🚀 移除原本的波浪 (Waves)，因為已有影片背景 */
+        .waves { display: none; }
+
+        /* 轉場遮罩層 */
+        #loading-overlay {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            background: #000 url('background/wallpaper2you_345056.jpg') no-repeat center center;
+            background-size: cover;
+            z-index: 9999;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+            letter-spacing: 5px;
+            text-shadow: 0 0 15px rgba(0,0,0,0.8);
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }        
+    </style>
+</head>
+<body>
+
+<video autoplay muted loop playsinline id="video-background">
+    <source src="./background/65266-514138761.mp4" type="video/mp4">
+    Your browser does not support the video tag.
+</video>
+
+<div id="loading-overlay">LOADING...</div>
+
+<div id="login-ui">
+    <div class="center">
+        <div class="login-box">
+            <h1>PiPi's Bookmark</h1>
+            <form id="login-form" onsubmit="event.preventDefault(); unlock();">
+                <input type="text" name="username" value="pipi" style="display:none;" autocomplete="username">        
+                <input type="password" id="password" name="password" 
+                       placeholder="ENTER PASSWORD" 
+                       autocomplete="current-password" 
+                       autofocus>
+                <button type="submit">UNLOCK</button>
+            </form>
+            <div id="msg"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const k_p1 = "Z2hwX0U0UjZHVTNmaz", k_p2 = "Fid3hVNnN6N0h2TFJiQm", k_p3 = "VEdDhVQjJCQnd2TA==";
+    const CFG = { user: "pipi-family", repo: "my-private-data", _k: k_p1 + k_p2 + k_p3 };
+
+    function decodeBase64UTF8(str) {
+        const binStr = atob(str), bytes = new Uint8Array(binStr.length);
+        for (let i = 0; i < binStr.length; i++) bytes[i] = binStr.charCodeAt(i);
+        return new TextDecoder("utf-8").decode(bytes);
+    }
+
+    function renderSource(html) {
+        document.open();
+        document.write(html);
+        document.close();
+    }
+
+    window.onload = () => {
+        const saved = sessionStorage.getItem("vault");
+        if (saved) renderSource(saved);
+    };
+
+    async function fetchVault(file) {
+        const url = `https://api.github.com/repos/${CFG.user}/${CFG.repo}/contents/${file}`;
+        const res = await fetch(url, { headers: { Authorization: `token ${atob(CFG._k)}` } });
+        if (!res.ok) throw "api";
+        const data = await res.json();
+        return decodeBase64UTF8(data.content.replace(/\s/g, ""));
+    }
+
+    async function unlock() {
+        const msg = document.getElementById("msg");
+        const pwd = document.getElementById("password").value;
+        const overlay = document.getElementById("loading-overlay");
+        const hash = CryptoJS.SHA256(pwd).toString();
+        
+        msg.innerText = "Connecting...";
+        try {
+            const passJson = await fetchVault("pass.json");
+            if (hash === JSON.parse(passJson).hash) {
+                overlay.style.display = "flex";
+                setTimeout(() => overlay.style.opacity = "1", 10); 
+
+                const html = await fetchVault("source.html");
+                sessionStorage.setItem("vault", html);
+                renderSource(html);
+            } else { 
+                msg.innerText = "Access Denied"; 
+            }
+        } catch (e) { 
+            msg.innerText = "Connection Error"; 
+        }
+    }
+</script>
+</body>
+</html>

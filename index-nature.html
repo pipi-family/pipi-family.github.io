@@ -12,11 +12,16 @@
             font-family: system-ui, -apple-system, sans-serif;
         }
 
+        /* 🎬 修正後的影片背景樣式 */
         #video-background {
-            position: fixed; top: 50%; left: 50%;
-            min-width: 100%; min-height: 100%;
-            width: auto; height: auto; z-index: 0; /* 修正 z-index 確保在登入框之下 */
-            transform: translate(-50%, -50%); object-fit: cover;
+            position: fixed; 
+            top: 0; 
+            left: 0;
+            width: 100vw; 
+            height: 100vh; 
+            z-index: 0; 
+            object-fit: cover; /* 確保影片填滿螢幕並保持比例 */
+            object-position: center; /* 確保影片內容置中 */
         }
 
         #login-ui {
@@ -61,8 +66,8 @@
 </head>
 <body>
 
-<!-- 🎬 更新後的影片語法 -->
 <video autoplay muted loop playsinline id="video-background">
+    <!-- 使用您提供的 GitHub Release 影片直連網址 -->
     <source src="https://github.com/pipi-family/pipi-family.github.io/releases/download/1.0.0/271161.mp4" type="video/mp4">
 </video>
 

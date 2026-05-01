@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>PiPi's Bookmark</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <style>
+        html, body { 
+            margin: 0; padding: 0; width: 100%; height: 100%; 
+            overflow: hidden; background-color: #1a1a1a; 
+            font-family: system-ui, -apple-system, sans-serif;
+        }
+
+        #video-background {
+            position: fixed; top: 50%; left: 50%;
+            min-width: 100%; min-height: 100%;
+            width: auto; height: auto; z-index: 0; /* 修正 z-index 確保在登入框之下 */
+            transform: translate(-50%, -50%); object-fit: cover;
+        }
+
+        #login-ui {
+            height: 100vh; display: flex; align-items: center; justify-content: center;
+            position: relative; z-index: 10; background: rgba(0, 0, 0, 0.4);
+        }
+
+        /* 🚀 改用 iframe 承載內容 */
+        #content-frame {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 100; border: none; display: none; background: white;
+        }
+
+        .login-box { width: 300px; text-align: center; color: white; }
+        h1 { font-weight: 300; letter-spacing: 4px; margin-bottom: 40px; font-size: 28px; }
+
+        input {
+            width: 100%; padding: 14px; border: 1px solid rgba(255, 255, 255, 0.3); 
+            border-radius: 30px; text-align: center; outline: none; 
+            font-size: 16px; margin-bottom: 20px; box-sizing: border-box; 
+            background: rgba(255, 255, 255, 0.05); color: white;
+            backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+        }
+        
+        button {
+            width: 100%; padding: 12px; border-radius: 30px; 
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            background: transparent; color: white; font-weight: bold; 
+            cursor: pointer; transition: 0.3s; letter-spacing: 3px;
+        }
+        button:hover { background: rgba(255, 255, 255, 0.9); color: #000; }
+
+        #msg { margin-top: 20px; font-size: 12px; color: rgba(255,255,255,0.8); min-height: 1.2em; }
+
+        #loading-overlay {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: #000; z-index: 9999; display: none;
+            align-items: center; justify-content: center; color: white;
+            font-size: 24px; letter-spacing: 5px; opacity: 0; transition: opacity 0.4s ease;
+        }
+    </style>
+</head>
+<body>
+
+<!-- 🎬 更新後的影片語法 -->
+<video autoplay muted loop playsinline id="video-background">
+    <source src="https://github.com/pipi-family/pipi-family.github.io/releases/download/1.0.0/271161.mp4" type="video/mp4">
+</video>
+
+<div id="login-ui">
+    <div class="login-box">
+        <h1>PiPi's Bookmark</h1>
+        <form id="login-form" onsubmit="event.preventDefault(); unlock();">
+            <input type="password" id="password" placeholder="ENTER PASSWORD" autocomplete="current-password" autofocus>
+            <button type="submit">UNLOCK</button>
+        </form>
+        <div id="msg"></div>
+    </div>
+</div>
+
+<!-- 🚀 使用 iframe 代替 div -->
+<iframe id="content-frame"></iframe>
+
+<div id="loading-overlay">LOADING...</div>
+
+<script>
+    const k_p1 = "Z2hwX0U0UjZHVTNmaz", k_p2 = "Fid3hVNnN6N0h2TFJiQm", k_p3 = "VEdDhVQjJCQnd2TA==";
+    const CFG = { user: "pipi-family", repo: "my-private-data", _k: k_p1 + k_p2 + k_p3 };
+
+    function decodeBase64UTF8(str) {
+        const binStr = atob(str), bytes = new Uint8Array(binStr.length);
+        for (let i = 0; i < binStr.length; i++) bytes[i] = binStr.charCodeAt(i);
+        return new TextDecoder("utf-8").decode(bytes);
+    }
+
+    function renderSource(html) {
+        const frame = document.getElementById("content-frame");
+        const loginUI = document.getElementById("login-ui");
+        
+        frame.style.display = "block";
+        const doc = frame.contentDocument || frame.contentWindow.document;
+        doc.open();
+        doc.write(html);
+        doc.close();
+
+        if(loginUI) loginUI.style.display = "none";
+        const video = document.getElementById("video-background");
+        if(video) video.remove();
+    }
+
+    window.onload = () => {
+        const saved = sessionStorage.getItem("vault");
+        if (saved) renderSource(saved);
+    };
+
+    async function fetchVault(file) {
+        const url = `https://api.github.com/repos/${CFG.user}/${CFG.repo}/contents/${file}`;
+        const res = await fetch(url, { headers: { Authorization: `token ${atob(CFG._k)}` } });
+        if (!res.ok) throw "api";
+        const data = await res.json();
+        return decodeBase64UTF8(data.content.replace(/\s/g, ""));
+    }
+
+    async function unlock() {
+        const msg = document.getElementById("msg");
+        const pwd = document.getElementById("password").value;
+        const overlay = document.getElementById("loading-overlay");
+        const hash = CryptoJS.SHA256(pwd).toString();
+        
+        msg.innerText = "Connecting...";
+        try {
+            const passJson = await fetchVault("pass.json");
+            if (hash === JSON.parse(passJson).hash) {
+                overlay.style.display = "flex";
+                setTimeout(() => overlay.style.opacity = "1", 10); 
+
+                const html = await fetchVault("source.html");
+                sessionStorage.setItem("vault", html);
+                
+                renderSource(html);
+                setTimeout(() => {
+                    overlay.style.display = "none";
+                }, 500);
+            } else { 
+                msg.innerText = "Access Denied"; 
+            }
+        } catch (e) { 
+            msg.innerText = "Connection Error"; 
+        }
+    }
+</script>
+</body>
+</html>

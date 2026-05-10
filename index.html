@@ -1,5 +1,15 @@
-<!- 溪流背景 - 2026/05/01 /index-nature.html -> 
-<!- Video Source page: https://pixabay.com/zh/videos/river-rocks-moss-green-water-271161/ ->
+<!-- 
+  PiPi's Bookmark (index.html)
+  
+  歷史更新紀錄:
+  - 2026/05/01: 初始版本，加入溪流背景影片。
+  - 2026/05/10: 解決 FOUC 問題 (Flash of Unstyled Content)。
+    * 優化邏輯：改用 iframe 幕後載入 (opacity: 0)，監聽 frame.onload 事件。
+    * 優化邏輯：確保 CSS 完全載入後才透過 transition 淡入內容。
+    * 優化邏輯：將 loading-overlay 設為最高層級 (z-index: 9999) 避免解密過程畫面閃爍。
+  
+  Video Source: https://pixabay.com/zh/videos/river-rocks-moss-green-water-271161/
+-->
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
@@ -14,16 +24,14 @@
             font-family: system-ui, -apple-system, sans-serif;
         }
 
-        /* 🎬 修正後的影片背景樣式 */
+        /* 🎬 影片背景樣式 */
         #video-background {
             position: fixed; 
-            top: 0; 
-            left: 0;
-            width: 100vw; 
-            height: 100vh; 
+            top: 0; left: 0;
+            width: 100vw; height: 100vh; 
             z-index: 0; 
-            object-fit: cover; /* 確保影片填滿螢幕並保持比例 */
-            object-position: center; /* 確保影片內容置中 */
+            object-fit: cover;
+            object-position: center;
         }
 
         #login-ui {
@@ -31,10 +39,13 @@
             position: relative; z-index: 10; background: rgba(0, 0, 0, 0.4);
         }
 
-        /* 🚀 改用 iframe 承載內容 */
+        /* 🚀 初始狀態隱藏且透明，避免 CSS 尚未作用時顯示 */
         #content-frame {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            z-index: 100; border: none; display: none; background: white;
+            z-index: 100; border: none; 
+            display: none; opacity: 0; 
+            background: white;
+            transition: opacity 0.6s ease;
         }
 
         .login-box { width: 300px; text-align: center; color: white; }
@@ -58,18 +69,19 @@
 
         #msg { margin-top: 20px; font-size: 12px; color: rgba(255,255,255,0.8); min-height: 1.2em; }
 
+        /* 🚀 Loading 遮罩需覆蓋全場 */
         #loading-overlay {
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
             background: #000; z-index: 9999; display: none;
             align-items: center; justify-content: center; color: white;
             font-size: 24px; letter-spacing: 5px; opacity: 0; transition: opacity 0.4s ease;
+            pointer-events: none;
         }
     </style>
 </head>
 <body>
 
 <video autoplay muted loop playsinline id="video-background">
-    <!-- 使用您提供的 GitHub Release 影片直連網址 -->
     <source src="https://github.com/pipi-family/pipi-family.github.io/releases/download/1.0.0/271161.mp4" type="video/mp4">
 </video>
 
@@ -84,9 +96,10 @@
     </div>
 </div>
 
-<!-- 🚀 使用 iframe 代替 div -->
+<!-- 承載解密後內容的 iframe -->
 <iframe id="content-frame"></iframe>
 
+<!-- 過渡動畫遮罩 -->
 <div id="loading-overlay">LOADING...</div>
 
 <script>
@@ -102,16 +115,31 @@
     function renderSource(html) {
         const frame = document.getElementById("content-frame");
         const loginUI = document.getElementById("login-ui");
+        const overlay = document.getElementById("loading-overlay");
+        const video = document.getElementById("video-background");
+
+        // 啟動 iframe 載入流程，但不立即顯示
+        frame.style.display = "block"; 
         
-        frame.style.display = "block";
         const doc = frame.contentDocument || frame.contentWindow.document;
         doc.open();
         doc.write(html);
         doc.close();
 
-        if(loginUI) loginUI.style.display = "none";
-        const video = document.getElementById("video-background");
-        if(video) video.remove();
+        // 關鍵：等待 iframe 內部資源（CSS）載入完畢才顯示
+        frame.onload = () => {
+            if(loginUI) loginUI.style.display = "none";
+            if(video) video.remove();
+
+            // 確保樣式已生效，平滑淡入
+            frame.style.opacity = "1";
+
+            // 隱藏 Loading 遮罩
+            if(overlay) {
+                overlay.style.opacity = "0";
+                setTimeout(() => { overlay.style.display = "none"; }, 500);
+            }
+        };
     }
 
     window.onload = () => {
@@ -134,9 +162,11 @@
         const hash = CryptoJS.SHA256(pwd).toString();
         
         msg.innerText = "Connecting...";
+        
         try {
             const passJson = await fetchVault("pass.json");
             if (hash === JSON.parse(passJson).hash) {
+                // 驗證成功，立即覆蓋全黑畫面遮擋渲染過程
                 overlay.style.display = "flex";
                 setTimeout(() => overlay.style.opacity = "1", 10); 
 
@@ -144,9 +174,6 @@
                 sessionStorage.setItem("vault", html);
                 
                 renderSource(html);
-                setTimeout(() => {
-                    overlay.style.display = "none";
-                }, 500);
             } else { 
                 msg.innerText = "Access Denied"; 
             }

@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>qBittorrent 更新指南 (192.168.1.120)</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            font-size: 16px;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f8f9fa;
+            display: flex;
+            min-hight: 100vh;
+        }
+        /* 左側快捷導覽列 */
+        .sidebar {
+            width: 260px;
+            background-color: #1e1e24;
+            color: #fff;
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            padding: 20px;
+            overflow-y: auto;
+            border-right: 1px solid #2d2d34;
+        }
+        .sidebar-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 25px;
+            color: #4fc08d;
+            border-bottom: 2px solid #4fc08d;
+            padding-bottom: 10px;
+        }
+        .sidebar-menu {
+            list-style: none;
+        }
+        .sidebar-item {
+            margin-bottom: 15px;
+        }
+        .sidebar-link {
+            color: #ccc;
+            text-decoration: none;
+            display: block;
+            padding: 8px 12px;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+        }
+        .sidebar-link:hover {
+            background-color: #2db7f5;
+            color: #fff;
+            padding-left: 18px;
+        }
+        /* 右側內容區 */
+        .content {
+            margin-left: 260px;
+            padding: 40px;
+            max-width: 1000px;
+            width: 100%;
+        }
+        .header {
+            margin-bottom: 30px;
+            border-bottom: 1px solid #e9ecef;
+            padding-bottom: 20px;
+        }
+        .header h1 {
+            font-size: 28px;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        .meta-info {
+            font-size: 14px;
+            color: #6c757d;
+        }
+        .badge {
+            background-color: #17a2b8;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 3px;
+            font-size: 12px;
+            margin-right: 5px;
+        }
+        /* 卡片設計 */
+        .section-card {
+            background: #fff;
+            border-radius: 8px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            scroll-margin-top: 20px; /* 錨點跳轉留空 */
+        }
+        .section-card h3 {
+            font-size: 20px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+        }
+        .color-blue { border-left: 5px solid #1a73e8; padding-left: 10px; }
+        .color-green { border-left: 5px solid #2db7f5; padding-left: 10px; }
+        .color-orange { border-left: 5px solid #e28743; padding-left: 10px; }
+
+        /* 指令碼區塊 */
+        .code-container {
+            position: relative;
+            background-color: #282c34;
+            border-radius: 6px;
+            margin: 15px 0;
+            overflow: hidden;
+        }
+        pre {
+            padding: 15px;
+            overflow-x: auto;
+            color: #abb2bf;
+            font-family: Consolas, Monaco, "Andale Mono", monospace;
+            font-size: 14px;
+        }
+        .copy-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: #1a73e8;
+            color: white;
+            border: none;
+            padding: 5px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: bold;
+            transition: background-color 0.2s;
+            z-index: 10;
+        }
+        .copy-btn:hover {
+            background-color: #155cb4;
+        }
+        /* 提示框 */
+        .tips-box {
+            background-color: #fff9db;
+            border-left: 5px solid #fcc419;
+            padding: 15px;
+            margin-top: 20px;
+            border-radius: 0 4px 4px 0;
+            font-size: 15px;
+        }
+        .tips-box ul {
+            margin-left: 20px;
+            margin-top: 10px;
+        }
+
+        /* 響應式優化 */
+        @media (max-width: 768px) {
+            body {
+                flex-direction: column;
+            }
+            .sidebar {
+                position: relative;
+                width: 100%;
+                height: auto;
+                border-right: none;
+                border-bottom: 1px solid #2d2d34;
+            }
+            .content {
+                margin-left: 0;
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="sidebar">
+        <div class="sidebar-title">項目快捷導覽</div>
+        <ul class="sidebar-menu">
+            <li class="sidebar-item">
+                <a href="#step-backup" class="sidebar-link">🛡️ 1. 安全備份</a>
+            </li>
+            <li class="sidebar-item">
+                <a href="#step-update" class="sidebar-link">⚡ 2. 更新指令</a>
+            </li>
+            <li class="sidebar-item">
+                <a href="#step-check" class="sidebar-link">🔍 3. 狀態檢查</a>
+            </li>
+        </ul>
+    </nav>
+
+    <main class="content">
+        <header class="header">
+            <h1>qBittorrent 靜態版更新指南</h1>
+            <div class="meta-info">
+                <span class="badge">環境</span> PVE LXC (Debian) &nbsp;|&nbsp; 
+                <span class="badge">主機 IP</span> <a href="http://192.168.1.120:8080" target="_blank" style="color: #1a73e8; text-decoration: none; font-weight: bold;">192.168.1.120:8080</a>
+            </div>
+        </header>
+
+        <section id="step-backup" class="section-card">
+            <h3 class="color-blue">步驟一：前置安全備份</h3>
+            <p>由於外掛 NAS 資料夾，本客體機不支援快照。更新前請手動在容器內備份<b>執行檔</b>與包含帳密、種子狀態的<b>設定檔</b>。</p>
+        </section>
+
+        <section id="step-update" class="section-card">
+            <h3 class="color-green">步驟二：連線與執行更新</h3>
+            <p>請使用 SSH 或透過 PVE 控制台登入，並在 <code>root@qBittorrent:~#</code> 提示字元下執行以下整合指令：</p>
+            
+            <div class="code-container">
+                <button class="copy-btn" onclick="copyCode('update-code')">📋 複製</button>
+                <pre id="update-code"># 1. 備份現有的執行檔與設定檔
+cp /usr/bin/qbittorrent-nox /usr/bin/qbittorrent-nox.v522.bak
+rm -rf ~/.config/qBittorrent_bak_old
+mv ~/.config/qBittorrent_bak ~/.config/qBittorrent_bak_old 2>/dev/null
+cp -r ~/.config/qBittorrent ~/.config/qBittorrent_bak
+
+# 2. 停止當前服務並下載官方最新修正版靜態執行檔
+systemctl stop qbittorrent-nox
+wget -O /usr/bin/qbittorrent-nox https://github.com/userdocs/qbittorrent-nox-static/releases/latest/download/x86_64-qbittorrent-nox
+
+# 3. 賦予檔案執行權限並重啟服務
+chmod +x /usr/bin/qbittorrent-nox
+systemctl start qbittorrent-nox</pre>
+            </div>
+        </section>
+
+        <section id="step-check" class="section-card">
+            <h3 class="color-orange">步驟三：檢查與修復</h3>
+            <p>執行以下指令確認系統狀態是否已回到綠色的 <code>active (running)</code>：</p>
+            
+            <div class="code-container">
+                <button class="copy-btn" onclick="copyCode('check-code')">📋 複製</button>
+                <pre id="check-code">systemctl status qbittorrent-nox</pre>
+            </div>
+
+            <div class="tips-box">
+                <strong>💡 故障排除與小提示：</strong>
+                <ul>
+                    <li>更新後若 WebUI 卡死（顯示已在運行卻無法連線），請執行：<br><code>rm ~/.config/qBittorrent/qBittorrent.lock</code> 清除鎖定檔後重啟服務。</li>
+                    <li>確認 WebUI 原本掛載的 NAS 下載路徑與種子皆正常做種即可。</li>
+                </ul>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        function copyCode(elementId) {
+            const codeText = document.getElementById(elementId).innerText;
+            navigator.clipboard.writeText(codeText).then(() => {
+                const btn = event.target;
+                const originalText = btn.innerText;
+                btn.innerText = "✓ 已複製";
+                btn.style.backgroundColor = "#2db7f5";
+                setTimeout(() => {
+                    btn.innerText = originalText;
+                    btn.style.backgroundColor = "#1a73e8";
+                }, 1500);
+            }).catch(err => {
+                alert("複製失敗，請手動複製！原因: " + err);
+            });
+        }
+    </script>
+</body>
+</html>

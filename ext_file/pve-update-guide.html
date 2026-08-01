@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PVE 系統更新 SOP</title>
+  <style>
+    :root {
+      --bg-color: #f4f6f8;
+      --sidebar-bg: #1e2430;
+      --sidebar-text: #d1d5db;
+      --sidebar-hover: #374151;
+      --primary-color: #e57008; /* PVE Orange */
+      --card-bg: #ffffff;
+      --text-color: #1f2937;
+      --code-bg: #111827;
+      --code-text: #10b981;
+      --border-color: #e5e7eb;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100vh;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      font-size: 18px !important;
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      display: flex;
+      overflow: hidden;
+    }
+
+    /* 左側快捷列 */
+    .sidebar {
+      width: 280px;
+      background-color: var(--sidebar-bg);
+      color: var(--sidebar-text);
+      display: flex;
+      flex-direction: column;
+      padding: 1.5rem 1rem;
+      flex-shrink: 0;
+    }
+
+    .sidebar h2 {
+      font-size: 22px;
+      color: #ffffff;
+      margin-bottom: 1.5rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid var(--sidebar-hover);
+    }
+
+    .sidebar ul {
+      list-style: none;
+    }
+
+    .sidebar li {
+      margin-bottom: 0.5rem;
+    }
+
+    .sidebar a {
+      color: var(--sidebar-text);
+      text-decoration: none;
+      display: block;
+      padding: 0.8rem 1rem;
+      border-radius: 6px;
+      font-size: 18px;
+      transition: background 0.2s;
+    }
+
+    .sidebar a:hover {
+      background-color: var(--sidebar-hover);
+      color: #ffffff;
+    }
+
+    /* 右側主要內容 */
+    .content {
+      flex: 1;
+      width: calc(100% - 280px);
+      padding: 2.5rem;
+      overflow-y: auto;
+      scroll-behavior: smooth;
+    }
+
+    .header {
+      margin-bottom: 2rem;
+      padding-bottom: 1rem;
+      border-bottom: 2px solid var(--border-color);
+    }
+
+    .header h1 {
+      font-size: 34px;
+      color: var(--primary-color);
+    }
+
+    .header .meta {
+      font-size: 16px;
+      color: #6b7280;
+      margin-top: 0.5rem;
+    }
+
+    .section {
+      background: var(--card-bg);
+      padding: 1.8rem;
+      border-radius: 8px;
+      margin-bottom: 1.8rem;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+      border: 1px solid var(--border-color);
+      width: 100%;
+    }
+
+    .section h3 {
+      font-size: 24px;
+      margin-bottom: 1rem;
+      color: #111827;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .section p, .section ul {
+      font-size: 18px !important;
+      line-height: 1.7;
+      color: #374151;
+      margin-bottom: 1rem;
+    }
+
+    .section ul {
+      padding-left: 1.5rem;
+    }
+
+    /* 指令區塊與複製按鈕 */
+    .cmd-box {
+      position: relative;
+      background-color: var(--code-bg);
+      border-radius: 6px;
+      padding: 1.2rem 1.2rem;
+      margin-top: 0.8rem;
+    }
+
+    .cmd-box pre {
+      font-family: "Consolas", "Courier New", Courier, monospace !important;
+      color: var(--code-text);
+      font-size: 18px !important;
+      font-weight: 600;
+      line-height: 1.6;
+      white-space: pre-wrap;
+      word-break: break-all;
+      margin: 0;
+      padding-right: 5.5rem;
+    }
+
+    .copy-btn {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      background-color: #374151;
+      color: #ffffff;
+      border: none;
+      padding: 0.5rem 1rem;
+      font-size: 15px;
+      font-weight: bold;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .copy-btn:hover {
+      background-color: var(--primary-color);
+    }
+
+    .copy-btn.copied {
+      background-color: #10b981;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 左側快捷導覽 -->
+  <nav class="sidebar">
+    <h2>PVE 更新 SOP</h2>
+    <ul>
+      <li><a href="#prep">1. 準備與檢查</a></li>
+      <li><a href="#repo">2. 免費源設定 (No-Subscription)</a></li>
+      <li><a href="#update">3. 執行系統更新</a></li>
+      <li><a href="#reboot">4. 重啟與核對版本</a></li>
+    </ul>
+  </nav>
+
+  <!-- 右側操作程序 -->
+  <main class="content">
+    <div class="header">
+      <h1>Proxmox VE 系統更新程序</h1>
+      <div class="meta">適用環境：PVE 8.x / 9.x | 免費社群源設定與完整更新流程</div>
+    </div>
+
+    <!-- Step 1 -->
+    <section id="prep" class="section">
+      <h3>1. 準備與檢查</h3>
+      <p>在執行任何更新之前，請確認備份狀態並檢查目前的 PVE 服務與節點狀態。</p>
+      <ul>
+        <li>確認重要 VM / LXC 容器已完成備份（PBS 或本地備份）。</li>
+        <li>若為 Cluster 多節點環境，請確認 Migration 管道正常。</li>
+      </ul>
+    </section>
+
+    <!-- Step 2 -->
+    <section id="repo" class="section">
+      <h3>2. 免費社群源設定 (No-Subscription Repo)</h3>
+      <p>若無購買企業訂閱，請關閉企業源並啟用非訂閱社群源，避免更新時出現 <code>401 Unauthorized</code> 錯誤。</p>
+      
+      <p><strong>Step A: 關閉 Enterprise 企業套件源 (安全停用)</strong></p>
+      <div class="cmd-box">
+        <button class="copy-btn" onclick="copyCommand(this)">複製</button>
+        <pre>[ -f /etc/apt/sources.list.d/pve-enterprise.list ] && sed -i "s/^deb/#deb/g" /etc/apt/sources.list.d/pve-enterprise.list</pre>
+      </div>
+
+      <p style="margin-top: 1.5rem;"><strong>Step B: 新增 No-Subscription 免費套件源 (以 Debian Bookworm 為例)</strong></p>
+      <div class="cmd-box">
+        <button class="copy-btn" onclick="copyCommand(this)">複製</button>
+        <pre>cat &lt;&lt;EOF &gt; /etc/apt/sources.list.d/pve-no-subscription.list
+deb http://download.proxmox.com/debian/pve bookworm pve-no-subscription
+EOF</pre>
+      </div>
+    </section>
+
+    <!-- Step 3 -->
+    <section id="update" class="section">
+      <h3>3. 執行系統更新</h3>
+      <p>更新套件清單並執行完整更新。在 PVE 環境中，<strong>務必使用 <code>dist-upgrade</code></strong> 以確保核心與套件依賴完整更新（請勿僅使用 <code>upgrade</code>）。</p>
+
+      <p><strong>Step A: 更新套件索引與檢視升級項目</strong></p>
+      <div class="cmd-box">
+        <button class="copy-btn" onclick="copyCommand(this)">複製</button>
+        <pre>apt update && apt list --upgradable</pre>
+      </div>
+
+      <p style="margin-top: 1.5rem;"><strong>Step B: 執行系統完整升級</strong></p>
+      <div class="cmd-box">
+        <button class="copy-btn" onclick="copyCommand(this)">複製</button>
+        <pre>apt-get dist-upgrade -y</pre>
+      </div>
+    </section>
+
+    <!-- Step 4 -->
+    <section id="reboot" class="section">
+      <h3>4. 重啟與核對版本</h3>
+      <p>若更新內容包含 Linux Kernel 核心更新，建議重啟 PVE 實體主機以應用新核心。</p>
+
+      <p><strong>Step A: 檢查是否需要重啟 (核心變更)</strong></p>
+      <div class="cmd-box">
+        <button class="copy-btn" onclick="copyCommand(this)">複製</button>
+        <pre>uname -r</pre>
+      </div>
+
+      <p style="margin-top: 1.5rem;"><strong>Step B: 重啟 PVE 主機</strong></p>
+      <div class="cmd-box">
+        <button class="copy-btn" onclick="copyCommand(this)">複製</button>
+        <pre>reboot</pre>
+      </div>
+
+      <p style="margin-top: 1.5rem;"><strong>Step C: 重啟後核對 PVE 版本</strong></p>
+      <div class="cmd-box">
+        <button class="copy-btn" onclick="copyCommand(this)">複製</button>
+        <pre>pveversion -v</pre>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    function copyCommand(btn) {
+      const codeBlock = btn.nextElementSibling;
+      const textToCopy = codeBlock.textContent;
+
+      navigator.clipboard.writeText(textToCopy).then(() => {
+        const originalText = btn.textContent;
+        btn.textContent = '已複製！';
+        btn.classList.add('copied');
+
+        setTimeout(() => {
+          btn.textContent = originalText;
+          btn.classList.remove('copied');
+        }, 2000);
+      }).catch(err => {
+        console.error('複製失敗:', err);
+      });
+    }
+  </script>
+</body>
+</html>
